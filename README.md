@@ -53,12 +53,12 @@ frontend http443
     bind :443
     tcp-request inspect-delay 5s
     tcp-request content accept if { req.ssl_hello_type 1 }
-    default_backend masters
-backend masters
-    balance random
-    server master1 192.168.10.101:6443 check
-    server master2 192.168.10.102:6443 check
-    server master3 192.168.10.103:6443 check
+    default_backend k8s
+backend k8s
+    balance leastconn
+    server master1 192.168.10.101:6443 check fall 3 rise 3
+    server master2 192.168.10.102:6443 check fall 3 rise 3
+    server master3 192.168.10.103:6443 check fall 3 rise 3
 ```
 
 ## haproxy log to file
