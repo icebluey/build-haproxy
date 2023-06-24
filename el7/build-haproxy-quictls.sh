@@ -73,7 +73,7 @@ _build_zlib() {
     rm -f zlib-*.tar*
     cd zlib-*
     ./configure --prefix=/usr --libdir=/usr/lib64 --includedir=/usr/include --sysconfdir=/etc --64
-    make all
+    make -j2 all
     rm -fr /tmp/zlib
     make DESTDIR=/tmp/zlib install
     cd /tmp/zlib
@@ -114,7 +114,7 @@ _build_libedit() {
     --enable-shared --enable-static \
     --enable-widec
     sleep 1
-    make all
+    make -j2 all
     rm -fr /tmp/libedit
     make install DESTDIR=/tmp/libedit
     cd /tmp/libedit
@@ -154,7 +154,7 @@ _build_pcre2() {
     --enable-unicode \
     --prefix=/usr --libdir=/usr/lib64 --includedir=/usr/include --sysconfdir=/etc
     sed 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' -i libtool
-    make all
+    make -j2 all
     rm -fr /tmp/pcre2
     make install DESTDIR=/tmp/pcre2
     cd /tmp/pcre2
@@ -200,7 +200,7 @@ _build_openssl111() {
     no-sm2 no-sm3 no-sm4 \
     shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
     perl configdata.pm --dump
-    make all
+    make -j2 all
     rm -fr /tmp/openssl111
     make DESTDIR=/tmp/openssl111 install_sw
     cd /tmp/openssl111
@@ -258,7 +258,7 @@ _build_openssl30quictls() {
     no-sm2 no-sm3 no-sm4 \
     shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
     perl configdata.pm --dump
-    make all
+    make -j2 all
     rm -fr /tmp/openssl30quictls
     make DESTDIR=/tmp/openssl30quictls install_sw
     cd /tmp/openssl30quictls
@@ -299,7 +299,7 @@ _build_lua() {
     sed 's#INSTALL_TOP=.*#INSTALL_TOP= /usr#g' -i Makefile
     sed 's|INSTALL_LIB=.*|INSTALL_LIB= /usr/lib64|g' -i Makefile
     sed 's|INSTALL_MAN=.*|INSTALL_MAN= /usr/share/man/man1|g' -i Makefile
-    make all
+    make -j2 all
     rm -f /usr/lib64/liblua.a
     rm -f /usr/lib64/liblua-*
     make install
