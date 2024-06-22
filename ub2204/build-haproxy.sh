@@ -537,6 +537,7 @@ _build_haproxy() {
     rm -f /lib/systemd/system/haproxy.service
     systemctl daemon-reload >/dev/null 2>&1 || : 
     install -v -c -m 0644 haproxy.service /lib/systemd/system/
+    [[ -e /etc/haproxy/haproxy.cfg ]] || (install -v -m 0644 /etc/haproxy/haproxy.cfg.default /etc/haproxy/haproxy.cfg && chown root:root /etc/haproxy/haproxy.cfg)
     [[ -d /etc/rsyslog.d ]] || install -m 0755 -d /etc/rsyslog.d
     [[ -d /etc/logrotate.d ]] || install -m 0755 -d /etc/logrotate.d
     [[ -d /var/lib/haproxy/dev ]] || install -m 0755 -d /var/lib/haproxy/dev
