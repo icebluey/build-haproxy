@@ -369,7 +369,9 @@ _build_haproxy() {
     sleep 1
     rm -f haproxy-*.tar*
     cd haproxy*
-    #LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,/usr/lib/x86_64-linux-gnu/haproxy/private' ; export LDFLAGS
+    LDFLAGS=''
+    LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
+    #LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,/usr/lib/x86_64-linux-gnu/haproxy/private'; export LDFLAGS
     sed 's|http://|https://|g' -i include/haproxy/version.h
     sed '/DOCDIR =/s@$(PREFIX)/doc@$(PREFIX)/share/doc@g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i Makefile
