@@ -531,6 +531,9 @@ _build_haproxy() {
 
     echo '
     cd "$(dirname "$0")"
+    getent group haproxy >/dev/null || groupadd -r haproxy
+    getent passwd haproxy >/dev/null || useradd -r -g haproxy \
+      -d /var/lib/haproxy -s /usr/sbin/nologin -c "HAProxy Load Balancer" haproxy
     rm -f /lib/systemd/system/haproxy.service
     systemctl daemon-reload >/dev/null 2>&1 || : 
     install -v -c -m 0644 haproxy.service /lib/systemd/system/
@@ -539,16 +542,11 @@ _build_haproxy() {
     [[ -d /var/lib/haproxy/dev ]] || install -m 0755 -d /var/lib/haproxy/dev
     [[ -d /var/log/haproxy ]] || install -m 0755 -d /var/log/haproxy
     [[ -f /var/log/haproxy/haproxy.log ]] || install -m 0600 /dev/null /var/log/haproxy/haproxy.log
-    getent group haproxy >/dev/null || groupadd -r haproxy
-    getent passwd haproxy >/dev/null || useradd -r -g haproxy \
-      -d /var/lib/haproxy -s /usr/sbin/nologin -c "HAProxy Load Balancer" haproxy
-    sleep 1
     chown -R haproxy:haproxy /var/lib/haproxy
     chown haproxy:haproxy /var/log/haproxy
+    chown syslog:adm /var/log/haproxy/haproxy.log
     systemctl daemon-reload >/dev/null 2>&1 || : 
-    echo '\''#$ModLoad imuxsock
-    $AddUnixListenSocket /var/lib/haproxy/dev/log
-    #$template haproxy,"%timestamp:::date-rfc3339% %HOSTNAME% %syslogtag%%msg%\n"
+    echo '\''$AddUnixListenSocket /var/lib/haproxy/dev/log
     :programname, startswith, "haproxy" {
         /var/log/haproxy/haproxy.log
         stop
@@ -556,7 +554,7 @@ _build_haproxy() {
     chmod 0644 /etc/rsyslog.d/10-haproxy.conf
     echo '\''/var/log/haproxy/*log {
         daily
-        rotate 62
+        rotate 30
         dateext
         missingok
         notifempty
@@ -569,6 +567,7 @@ _build_haproxy() {
     }'\'' >/etc/logrotate.d/haproxy
     chmod 0644 /etc/logrotate.d/haproxy
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
+    systemctl restart logrotate.service >/dev/null 2>&1 || : 
     ' > etc/haproxy/.install.txt
     sed 's|^    ||g' -i etc/haproxy/.install.txt
 
