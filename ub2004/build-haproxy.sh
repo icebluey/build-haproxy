@@ -569,6 +569,7 @@ _build_haproxy() {
         endscript
     }'\'' >/etc/logrotate.d/haproxy
     chmod 0644 /etc/logrotate.d/haproxy
+    sleep 1
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
     systemctl restart logrotate.service >/dev/null 2>&1 || : 
     ' > etc/haproxy/.install.txt
