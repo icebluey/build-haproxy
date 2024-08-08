@@ -580,7 +580,8 @@ _build_haproxy() {
 
     install -m 0755 -d usr/lib/x86_64-linux-gnu/haproxy
     cp -afr /usr/lib/x86_64-linux-gnu/haproxy/private usr/lib/x86_64-linux-gnu/haproxy/
-    patchelf --add-rpath '$ORIGIN/../lib/x86_64-linux-gnu/haproxy/private' usr/sbin/haproxy
+    # ubuntu 20.04 patchelf 0.10
+    patchelf --set-rpath '$ORIGIN/../lib/x86_64-linux-gnu/haproxy/private' usr/sbin/haproxy
     rm -fr var
     rm -fr lib
     echo
