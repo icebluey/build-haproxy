@@ -22,6 +22,6 @@ docker exec ub2004 /bin/bash /home/ub2004/build-haproxy.sh
 _haproxy_ver="$(docker exec ub2004 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
 rm -fr /home/.tmp.haproxy
 mkdir /home/.tmp.haproxy
-docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz /home/.tmp.haproxy/
-docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz.sha256 /home/.tmp.haproxy/
+docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz /home/.tmp.haproxy/
+docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz.sha256 /home/.tmp.haproxy/
 exit
