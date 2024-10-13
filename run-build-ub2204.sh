@@ -16,8 +16,7 @@ docker cp ub2204 ub2204:/home/
 docker exec ub2204 /bin/bash /home/ub2204/.preinstall_ub2204
 docker exec ub2204 /bin/bash /home/ub2204/build-haproxy.sh
 _haproxy_ver="$(docker exec ub2204 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
-rm -fr /home/.tmp.haproxy
-mkdir /home/.tmp.haproxy
-docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz /home/.tmp.haproxy/
-docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz.sha256 /home/.tmp.haproxy/
+mkdir -p /tmp/_output.tmp
+docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz /tmp/_output.tmp/
+docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz.sha256 /tmp/_output.tmp/
 exit
