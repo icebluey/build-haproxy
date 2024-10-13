@@ -20,7 +20,7 @@ jobs:
           sudo apt upgrade -y -qqq;
           sudo /bin/bash scripts/install-docker.sh
 
-      - name: Make output tmp
+      - name: Create output tmp
         run: |
           /bin/rm -fr /tmp/_output.tmp
           mkdir /tmp/_output.tmp
