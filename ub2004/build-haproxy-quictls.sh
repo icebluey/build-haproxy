@@ -14,6 +14,8 @@ CXX=g++
 export CXX
 /sbin/ldconfig
 
+_private_dir='usr/lib/x86_64-linux-gnu/haproxy/private'
+
 set -e
 
 _strip_files() {
@@ -69,13 +71,13 @@ _build_zlib() {
     rm -f zlib-*.tar*
     cd zlib-*
     ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc --64
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/zlib
     make DESTDIR=/tmp/zlib install
     cd /tmp/zlib
     _strip_files
-    install -m 0755 -d usr/lib/x86_64-linux-gnu/haproxy/private
-    cp -af usr/lib/x86_64-linux-gnu/*.so* usr/lib/x86_64-linux-gnu/haproxy/private/
+    install -m 0755 -d "${_private_dir}"
+    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
     /bin/rm -f /usr/lib/x86_64-linux-gnu/libz.so*
     /bin/rm -f /usr/lib/x86_64-linux-gnu/libz.a
     sleep 2
@@ -84,6 +86,95 @@ _build_zlib() {
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/zlib
+    /sbin/ldconfig
+}
+
+_build_brotli() {
+    /sbin/ldconfig
+    set -e
+    _tmp_dir="$(mktemp -d)"
+    cd "${_tmp_dir}"
+    git clone --recursive 'https://github.com/google/brotli.git' brotli
+    cd brotli
+    rm -fr .git
+    if [[ -f bootstrap ]]; then
+        ./bootstrap
+        rm -fr autom4te.cache
+        LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
+        ./configure \
+        --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
+        --enable-shared --disable-static \
+        --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc
+        make -j$(nproc --all) all
+        rm -fr /tmp/brotli
+        make install DESTDIR=/tmp/brotli
+    else
+        LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$ORIGIN' ; export LDFLAGS
+        cmake \
+        -S "." \
+        -B "build" \
+        -DCMAKE_BUILD_TYPE='Release' \
+        -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+        -DINCLUDE_INSTALL_DIR:PATH=/usr/include \
+        -DLIB_INSTALL_DIR:PATH=/usr/lib/x86_64-linux-gnu \
+        -DSYSCONF_INSTALL_DIR:PATH=/etc \
+        -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
+        -DLIB_SUFFIX=64 \
+        -DBUILD_SHARED_LIBS:BOOL=ON \
+        -DCMAKE_INSTALL_SO_NO_EXE:INTERNAL=0
+        cmake --build "build" --parallel $(nproc --all) --verbose
+        rm -fr /tmp/brotli
+        DESTDIR="/tmp/brotli" cmake --install "build"
+    fi
+    cd /tmp/brotli
+    _strip_files
+    install -m 0755 -d "${_private_dir}"
+    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
+    sleep 2
+    /bin/cp -afr * /
+    sleep 2
+    cd /tmp
+    rm -fr "${_tmp_dir}"
+    rm -fr /tmp/brotli
+    /sbin/ldconfig
+}
+
+_build_zstd() {
+    /sbin/ldconfig
+    set -e
+    _tmp_dir="$(mktemp -d)"
+    cd "${_tmp_dir}"
+    git clone --recursive "https://github.com/facebook/zstd.git"
+    cd zstd
+    rm -fr .git
+    sed '/^PREFIX/s|= .*|= /usr|g' -i Makefile
+    sed '/^LIBDIR/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i Makefile
+    sed '/^prefix/s|= .*|= /usr|g' -i Makefile
+    sed '/^libdir/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i Makefile
+    sed '/^PREFIX/s|= .*|= /usr|g' -i lib/Makefile
+    sed '/^LIBDIR/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i lib/Makefile
+    sed '/^prefix/s|= .*|= /usr|g' -i lib/Makefile
+    sed '/^libdir/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i lib/Makefile
+    sed '/^PREFIX/s|= .*|= /usr|g' -i programs/Makefile
+    #sed '/^LIBDIR/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i programs/Makefile
+    sed '/^prefix/s|= .*|= /usr|g' -i programs/Makefile
+    #sed '/^libdir/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i programs/Makefile
+    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$OOORIGIN' ; export LDFLAGS
+    make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib/x86_64-linux-gnu
+    rm -fr /tmp/zstd
+    make install DESTDIR=/tmp/zstd
+    cd /tmp/zstd
+    _strip_files
+    find usr/lib/x86_64-linux-gnu/ -type f -iname '*.so*' | xargs -I '{}' chrpath -r '$ORIGIN' '{}'
+    install -m 0755 -d "${_private_dir}"
+    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
+    sleep 2
+    /bin/cp -afr * /
+    sleep 2
+    cd /tmp
+    rm -fr "${_tmp_dir}"
+    rm -fr /tmp/zstd
     /sbin/ldconfig
 }
 
@@ -110,7 +201,7 @@ _build_libedit() {
     --enable-shared --enable-static \
     --enable-widec
     sleep 1
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/libedit
     make install DESTDIR=/tmp/libedit
     cd /tmp/libedit
@@ -150,7 +241,7 @@ _build_pcre2() {
     --enable-unicode \
     --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc
     sed 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' -i libtool
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/pcre2
     make install DESTDIR=/tmp/pcre2
     cd /tmp/pcre2
@@ -167,49 +258,48 @@ _build_pcre2() {
     /sbin/ldconfig
 }
 
-_build_openssl111() {
-    /sbin/ldconfig
+_build_openssl31quictls() {
     set -e
     _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    _openssl111_ver="$(wget -qO- 'https://www.openssl.org/source/' | grep 'href="openssl-1.1.1' | sed 's|"|\n|g' | grep -i '^openssl-1.1.1.*\.tar\.gz$' | cut -d- -f2 | sed 's|\.tar.*||g' | sort -V | uniq | tail -n 1)"
-    wget -c -t 9 -T 9 "https://www.openssl.org/source/openssl-${_openssl111_ver}.tar.gz"
-    tar -xof openssl-*.tar*
+    git clone 'https://github.com/quictls/openssl.git'
+    cd openssl
+    _openssl31quictls_tag="$(git tag | grep -i quic | grep -i 'openssl-3.1\.' | sort -V | tail -n 1)"
+    git checkout "${_openssl31quictls_tag}"
     sleep 1
-    rm -f openssl-*.tar*
-    cd openssl-*
+    rm -fr .git
     # Only for debian/ubuntu
     sed '/define X509_CERT_FILE .*OPENSSLDIR "/s|"/cert.pem"|"/certs/ca-certificates.crt"|g' -i include/internal/cryptlib.h
     sed '/install_docs:/s| install_html_docs||g' -i Configurations/unix-Makefile.tmpl
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
+    LDFLAGS='' ; LDFLAGS='-Wl,-z,relro -Wl,--as-needed -Wl,-z,now -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
     HASHBANGPERL=/usr/bin/perl
     ./Configure \
     --prefix=/usr \
     --libdir=/usr/lib/x86_64-linux-gnu \
     --openssldir=/etc/ssl \
-    enable-ec_nistp_64_gcc_128 \
-    zlib enable-tls1_3 threads \
+    enable-zlib enable-tls1_3 threads \
     enable-camellia enable-seed \
     enable-rfc3779 enable-sctp enable-cms \
+    enable-ec enable-ecdh enable-ecdsa \
+    enable-ec_nistp_64_gcc_128 \
+    enable-poly1305 enable-ktls enable-quic \
     enable-md2 enable-rc5 \
     no-mdc2 no-ec2m \
     no-sm2 no-sm3 no-sm4 \
     shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
     perl configdata.pm --dump
-    make -j2 all
-    rm -fr /tmp/openssl111
-    make DESTDIR=/tmp/openssl111 install_sw
-    cd /tmp/openssl111
+    make -j$(nproc --all) all
+    rm -fr /tmp/openssl31quictls
+    make DESTDIR=/tmp/openssl31quictls install_sw
+    cd /tmp/openssl31quictls
     # Only for debian/ubuntu
     mkdir -p usr/include/x86_64-linux-gnu/openssl
     chmod 0755 usr/include/x86_64-linux-gnu/openssl
     install -c -m 0644 usr/include/openssl/opensslconf.h usr/include/x86_64-linux-gnu/openssl/
     sed 's|http://|https://|g' -i usr/lib/x86_64-linux-gnu/pkgconfig/*.pc
     _strip_files
-    install -m 0755 -d usr/lib/x86_64-linux-gnu/haproxy/private
-    cp -af usr/lib/x86_64-linux-gnu/*.so* usr/lib/x86_64-linux-gnu/haproxy/private/
-    #rm -f /usr/lib/x86_64-linux-gnu/libssl.*
-    #rm -f /usr/lib/x86_64-linux-gnu/libcrypto.*
+    install -m 0755 -d "${_private_dir}"
+    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
     rm -fr /usr/include/openssl
     rm -fr /usr/include/x86_64-linux-gnu/openssl
     rm -fr /usr/local/openssl-1.1.1
@@ -219,65 +309,7 @@ _build_openssl111() {
     sleep 2
     cd /tmp
     rm -fr "${_tmp_dir}"
-    rm -fr /tmp/openssl111
-    /sbin/ldconfig
-}
-
-_build_openssl30quictls() {
-    /sbin/ldconfig
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    #_openssl30quictls_ver="$(wget -qO- 'https://github.com/quictls/openssl/branches/all/' | grep -i 'branch="OpenSSL-3\.0\..*quic"' | sed 's/"/\n/g' | grep -i '^openssl.*quic$' | sort -V | tail -n 1)"
-    #git clone -b "${_openssl30quictls_ver}" 'https://github.com/quictls/openssl.git' 'openssl30quictls'
-    mv -f /tmp/openssl30quictls-git.tar.gz ./
-    tar -xof openssl30quictls-git.tar.gz
-    sleep 1
-    rm -f openssl30quictls-*.tar*
-    cd openssl30quictls
-    rm -fr .git
-    # Only for debian/ubuntu
-    sed '/define X509_CERT_FILE .*OPENSSLDIR "/s|"/cert.pem"|"/certs/ca-certificates.crt"|g' -i include/internal/cryptlib.h
-    sed '/install_docs:/s| install_html_docs||g' -i Configurations/unix-Makefile.tmpl
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
-    HASHBANGPERL=/usr/bin/perl
-    ./Configure \
-    --prefix=/usr \
-    --libdir=/usr/lib/x86_64-linux-gnu \
-    --openssldir=/etc/ssl \
-    enable-ec_nistp_64_gcc_128 \
-    zlib enable-tls1_3 threads \
-    enable-camellia enable-seed \
-    enable-rfc3779 enable-sctp enable-cms \
-    enable-md2 enable-rc5 enable-ktls \
-    no-mdc2 no-ec2m \
-    no-sm2 no-sm3 no-sm4 \
-    shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
-    perl configdata.pm --dump
-    make -j2 all
-    rm -fr /tmp/openssl30quictls
-    make DESTDIR=/tmp/openssl30quictls install_sw
-    cd /tmp/openssl30quictls
-    # Only for debian/ubuntu
-    mkdir -p usr/include/x86_64-linux-gnu/openssl
-    chmod 0755 usr/include/x86_64-linux-gnu/openssl
-    install -c -m 0644 usr/include/openssl/opensslconf.h usr/include/x86_64-linux-gnu/openssl/
-    sed 's|http://|https://|g' -i usr/lib/x86_64-linux-gnu/pkgconfig/*.pc
-    _strip_files
-    install -m 0755 -d usr/lib/x86_64-linux-gnu/haproxy/private
-    cp -af usr/lib/x86_64-linux-gnu/*.so* usr/lib/x86_64-linux-gnu/haproxy/private/
-    #rm -f /usr/lib/x86_64-linux-gnu/libssl.*
-    #rm -f /usr/lib/x86_64-linux-gnu/libcrypto.*
-    rm -fr /usr/include/openssl
-    rm -fr /usr/include/x86_64-linux-gnu/openssl
-    rm -fr /usr/local/openssl-1.1.1
-    rm -f /etc/ld.so.conf.d/openssl-1.1.1.conf
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/openssl30quictls
+    rm -fr /tmp/openssl31quictls
     /sbin/ldconfig
 }
 
@@ -295,7 +327,7 @@ _build_lua() {
     sed 's#INSTALL_TOP=.*#INSTALL_TOP= /usr#g' -i Makefile
     sed 's|INSTALL_LIB=.*|INSTALL_LIB= /usr/lib/x86_64-linux-gnu|g' -i Makefile
     sed 's|INSTALL_MAN=.*|INSTALL_MAN= /usr/share/man/man1|g' -i Makefile
-    make -j2 all
+    make -j$(nproc --all) all
     rm -f /usr/lib/x86_64-linux-gnu/liblua.a
     rm -f /usr/lib/x86_64-linux-gnu/liblua-*
     make install
@@ -310,18 +342,20 @@ _build_haproxy() {
     set -e
     _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | sort -V | tail -n 1)"
+    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.1' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.haproxy.org/download/${_haproxy_ver%.*}/src/haproxy-${_haproxy_ver}.tar.gz"
     tar -xof haproxy-*.tar*
     sleep 1
     rm -f haproxy-*.tar*
     cd haproxy*
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,/usr/lib/x86_64-linux-gnu/haproxy/private' ; export LDFLAGS
+    LDFLAGS=''
+    LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
+    #LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,/usr/lib/x86_64-linux-gnu/haproxy/private'; export LDFLAGS
     sed 's|http://|https://|g' -i include/haproxy/version.h
     sed '/DOCDIR =/s@$(PREFIX)/doc@$(PREFIX)/share/doc@g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i admin/systemd/Makefile
-    make V=1 -j2 \
+    make V=1 -j$(nproc --all) \
     CC='gcc' \
     CXX='g++' \
     CPU=generic \
@@ -330,16 +364,18 @@ _build_haproxy() {
     USE_PCRE2_JIT=1 \
     USE_THREAD=1 \
     USE_NS=1 \
-    USE_QUIC=1 \
     USE_OPENSSL=1 \
     USE_ZLIB=1 \
     USE_TFO=1 \
     USE_LUA=1 \
     USE_SYSTEMD=1 \
     USE_GETADDRINFO=1 \
+    USE_PROMEX=1 \
     ADDLIB="-lz -ldl -pthread" \
-    LDFLAGS="${LDFLAGS}" \
-    EXTRA_OBJS="addons/promex/service-prometheus.o"
+    LDFLAGS="${LDFLAGS}"
+
+    #USE_QUIC=1 \
+    #EXTRA_OBJS="addons/promex/service-prometheus.o"
     echo
     LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}" ; export LDFLAGS
     make admin/halog/halog SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
@@ -392,7 +428,7 @@ _build_haproxy() {
     # Example configuration for a possible web application.  See the
     # full configuration options online.
     #
-    #   https://www.haproxy.org/download/2.7/doc/configuration.txt
+    #   https://www.haproxy.org/download/3.0/doc/configuration.txt
     #
     #---------------------------------------------------------------------
     
@@ -474,24 +510,23 @@ _build_haproxy() {
 
     echo '
     cd "$(dirname "$0")"
+    getent group haproxy >/dev/null || groupadd -r haproxy
+    getent passwd haproxy >/dev/null || useradd -r -g haproxy \
+      -d /var/lib/haproxy -s /usr/sbin/nologin -c "HAProxy Load Balancer" haproxy
     rm -f /lib/systemd/system/haproxy.service
     systemctl daemon-reload >/dev/null 2>&1 || : 
     install -v -c -m 0644 haproxy.service /lib/systemd/system/
+    [[ -e /etc/haproxy/haproxy.cfg ]] || (install -v -m 0644 /etc/haproxy/haproxy.cfg.default /etc/haproxy/haproxy.cfg && chown root:root /etc/haproxy/haproxy.cfg)
     [[ -d /etc/rsyslog.d ]] || install -m 0755 -d /etc/rsyslog.d
     [[ -d /etc/logrotate.d ]] || install -m 0755 -d /etc/logrotate.d
     [[ -d /var/lib/haproxy/dev ]] || install -m 0755 -d /var/lib/haproxy/dev
     [[ -d /var/log/haproxy ]] || install -m 0755 -d /var/log/haproxy
     [[ -f /var/log/haproxy/haproxy.log ]] || install -m 0600 /dev/null /var/log/haproxy/haproxy.log
-    getent group haproxy >/dev/null || groupadd -r haproxy
-    getent passwd haproxy >/dev/null || useradd -r -g haproxy \
-      -d /var/lib/haproxy -s /usr/sbin/nologin -c "HAProxy Load Balancer" haproxy
-    sleep 1
     chown -R haproxy:haproxy /var/lib/haproxy
     chown haproxy:haproxy /var/log/haproxy
+    chown syslog:adm /var/log/haproxy/haproxy.log
     systemctl daemon-reload >/dev/null 2>&1 || : 
-    echo '\''#$ModLoad imuxsock
-    $AddUnixListenSocket /var/lib/haproxy/dev/log
-    #$template haproxy,"%timestamp:::date-rfc3339% %HOSTNAME% %syslogtag%%msg%\n"
+    echo '\''$AddUnixListenSocket /var/lib/haproxy/dev/log
     :programname, startswith, "haproxy" {
         /var/log/haproxy/haproxy.log
         stop
@@ -499,19 +534,21 @@ _build_haproxy() {
     chmod 0644 /etc/rsyslog.d/10-haproxy.conf
     echo '\''/var/log/haproxy/*log {
         daily
-        rotate 62
+        rotate 30
         dateext
         missingok
         notifempty
         compress
         sharedscripts
         postrotate
-            /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
-            /bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || true
+            /usr/bin/killall -HUP rsyslogd 2> /dev/null || true
+            /usr/bin/killall -HUP syslogd 2> /dev/null || true
         endscript
     }'\'' >/etc/logrotate.d/haproxy
     chmod 0644 /etc/logrotate.d/haproxy
+    sleep 1
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
+    systemctl restart logrotate.service >/dev/null 2>&1 || : 
     ' > etc/haproxy/.install.txt
     sed 's|^    ||g' -i etc/haproxy/.install.txt
 
@@ -521,14 +558,17 @@ _build_haproxy() {
 
     install -m 0755 -d usr/lib/x86_64-linux-gnu/haproxy
     cp -afr /usr/lib/x86_64-linux-gnu/haproxy/private usr/lib/x86_64-linux-gnu/haproxy/
+    # ubuntu 20.04 patchelf 0.10
+    patchelf --set-rpath '$ORIGIN/../lib/x86_64-linux-gnu/haproxy/private' usr/sbin/haproxy
     rm -fr var
+    rm -fr lib
     echo
     sleep 2
-    tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"-1_amd64.tar.xz *
+    tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"-quictls-1_ub2004_amd64.tar.xz *
     echo
     sleep 2
     cd /tmp
-    openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"-1_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"-1_amd64.tar.xz.sha256
+    openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"-quictls-1_ub2004_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"-quictls-1_ub2004_amd64.tar.xz.sha256
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/haproxy
     /sbin/ldconfig
@@ -536,28 +576,17 @@ _build_haproxy() {
 
 ############################################################################
 
-_dl_openssl30quictls() {
-    set -e
-    cd /tmp
-    rm -fr /tmp/openssl30quictls
-    _openssl30quictls_ver="$(wget -qO- 'https://github.com/quictls/openssl/branches/all/' | grep -i 'branch="OpenSSL-3\.0\..*quic"' | sed 's/"/\n/g' | grep -i '^openssl.*quic$' | sort -V | tail -n 1)"
-    git clone -b "${_openssl30quictls_ver}" 'https://github.com/quictls/openssl.git' 'openssl30quictls'
-    rm -fr openssl30quictls/.git
-    sleep 2
-    tar -zcf openssl30quictls-git.tar.gz openssl30quictls
-    sleep 2
-    cd /tmp
-    rm -fr /tmp/openssl30quictls
-}
-_dl_openssl30quictls
+apt update -y ; apt install -y  patchelf
 
-rm -fr /usr/lib/x86_64-linux-gnu/haproxy/private
+rm -fr /usr/lib/x86_64-linux-gnu/haproxy
 
 _build_zlib
+_build_brotli
+_build_zstd
 _build_libedit
 _build_pcre2
-#_build_openssl111
-_build_openssl30quictls
+#_build_openssl33
+_build_openssl31quictls
 _build_lua
 _build_haproxy
 
