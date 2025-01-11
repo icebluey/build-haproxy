@@ -71,7 +71,7 @@ _build_zlib() {
     rm -f zlib-*.tar*
     cd zlib-*
     ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc --64
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/zlib
     make DESTDIR=/tmp/zlib install
     cd /tmp/zlib
@@ -105,7 +105,7 @@ _build_brotli() {
         --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
         --enable-shared --disable-static \
         --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc
-        make -j2 all
+        make -j$(nproc --all) all
         rm -fr /tmp/brotli
         make install DESTDIR=/tmp/brotli
     else
@@ -161,7 +161,7 @@ _build_zstd() {
     sed '/^prefix/s|= .*|= /usr|g' -i programs/Makefile
     #sed '/^libdir/s|= .*|= /usr/lib/x86_64-linux-gnu|g' -i programs/Makefile
     LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$OOORIGIN' ; export LDFLAGS
-    make -j2 V=1 prefix=/usr libdir=/usr/lib/x86_64-linux-gnu
+    make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib/x86_64-linux-gnu
     rm -fr /tmp/zstd
     make install DESTDIR=/tmp/zstd
     cd /tmp/zstd
@@ -201,7 +201,7 @@ _build_libedit() {
     --enable-shared --enable-static \
     --enable-widec
     sleep 1
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/libedit
     make install DESTDIR=/tmp/libedit
     cd /tmp/libedit
@@ -241,7 +241,7 @@ _build_pcre2() {
     --enable-unicode \
     --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc
     sed 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' -i libtool
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/pcre2
     make install DESTDIR=/tmp/pcre2
     cd /tmp/pcre2
@@ -289,7 +289,7 @@ _build_openssl33() {
     no-sm2 no-sm2-precomp no-sm3 no-sm4 \
     shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
     perl configdata.pm --dump
-    make -j2 all
+    make -j$(nproc --all) all
     rm -fr /tmp/openssl33
     make DESTDIR=/tmp/openssl33 install_sw
     cd /tmp/openssl33
@@ -328,7 +328,7 @@ _build_lua() {
     sed 's#INSTALL_TOP=.*#INSTALL_TOP= /usr#g' -i Makefile
     sed 's|INSTALL_LIB=.*|INSTALL_LIB= /usr/lib/x86_64-linux-gnu|g' -i Makefile
     sed 's|INSTALL_MAN=.*|INSTALL_MAN= /usr/share/man/man1|g' -i Makefile
-    make -j2 all
+    make -j$(nproc --all) all
     rm -f /usr/lib/x86_64-linux-gnu/liblua.a
     rm -f /usr/lib/x86_64-linux-gnu/liblua-*
     make install
@@ -343,7 +343,7 @@ _build_haproxy() {
     set -e
     _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.0' | sort -V | tail -n 1)"
+    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.1' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.haproxy.org/download/${_haproxy_ver%.*}/src/haproxy-${_haproxy_ver}.tar.gz"
     tar -xof haproxy-*.tar*
     sleep 1
@@ -356,7 +356,7 @@ _build_haproxy() {
     sed '/DOCDIR =/s@$(PREFIX)/doc@$(PREFIX)/share/doc@g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i admin/systemd/Makefile
-    make V=1 -j2 \
+    make V=1 -j$(nproc --all) \
     CC='gcc' \
     CXX='g++' \
     CPU=generic \
