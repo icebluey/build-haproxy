@@ -582,8 +582,8 @@ apt update -y ; apt install -y  patchelf
 rm -fr /usr/lib/x86_64-linux-gnu/haproxy
 
 _build_zlib
-_build_brotli
-_build_zstd
+#_build_brotli
+#_build_zstd
 _build_libedit
 _build_pcre2
 #_build_openssl33
