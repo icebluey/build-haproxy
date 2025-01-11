@@ -372,7 +372,6 @@ _build_haproxy() {
     USE_SYSTEMD=1 \
     USE_GETADDRINFO=1 \
     USE_PROMEX=1 \
-    USE_QUIC=1 \
     ADDLIB="-lz -ldl -pthread" \
     LDFLAGS="${LDFLAGS}"
 
