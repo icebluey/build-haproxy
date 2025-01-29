@@ -485,7 +485,7 @@ _build_haproxy() {
     # Example configuration for a possible web application.  See the
     # full configuration options online.
     #
-    #   https://www.haproxy.org/download/3.0/doc/configuration.txt
+    #   https://www.haproxy.org/download/3.1/doc/configuration.txt
     #
     #---------------------------------------------------------------------
     
