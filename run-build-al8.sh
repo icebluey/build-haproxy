@@ -26,8 +26,8 @@ docker exec al8 /bin/bash /home/al8/.preinstall_al8
 docker exec al8 /bin/bash /home/al8/build-haproxy.sh
 _haproxy_ver="$(docker exec al8 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
 mkdir -p /tmp/_output.tmp
-docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_al8_amd64.tar.xz /tmp/_output.tmp/
-docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_al8_amd64.tar.xz.sha256 /tmp/_output.tmp/
+docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz /tmp/_output.tmp/
+docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
 sleep 2
 docker stop al8 || true
@@ -52,7 +52,7 @@ docker exec al8 /bin/bash /home/al8/.preinstall_al8
 docker exec al8 /bin/bash /home/al8/build-haproxy-quictls.sh
 _haproxy_ver="$(docker exec al8 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-quictls.*||g')"
 mkdir -p /tmp/_output.tmp
-docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-quictls-1_al8_amd64.tar.xz /tmp/_output.tmp/
-docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-quictls-1_al8_amd64.tar.xz.sha256 /tmp/_output.tmp/
+docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-quictls-1_el8_amd64.tar.xz /tmp/_output.tmp/
+docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-quictls-1_el8_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
 exit
