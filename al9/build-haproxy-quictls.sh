@@ -239,7 +239,7 @@ _build_openssl31quictls() {
     cd "${_tmp_dir}"
     git clone 'https://github.com/quictls/openssl.git'
     cd openssl
-    _openssl31quictls_tag="$(git tag | grep -i quic | grep -i 'openssl-3.1\.' | sort -V | tail -n 1)"
+    _openssl31quictls_tag="$(git tag | grep -i quic | grep -i 'openssl-3\.1\.' | sort -V | tail -n 1)"
     git checkout "${_openssl31quictls_tag}"
     sleep 1
     rm -fr .git
