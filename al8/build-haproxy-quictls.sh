@@ -265,10 +265,10 @@ _build_openssl31quictls() {
     rm -fr /tmp/openssl31quictls
     make DESTDIR=/tmp/openssl31quictls install_sw
     cd /tmp/openssl31quictls
-    sed 's|http://|https://|g' -i usr/lib/x86_64-linux-gnu/pkgconfig/*.pc
+    sed 's|http://|https://|g' -i usr/lib64/pkgconfig/*.pc
     _strip_files
     install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
+    cp -af usr/lib64/*.so* "${_private_dir}"/
     rm -fr /usr/include/openssl
     rm -fr /usr/include/x86_64-linux-gnu/openssl
     sleep 2
