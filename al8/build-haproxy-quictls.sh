@@ -626,8 +626,8 @@ dnf install -y patchelf
 rm -fr /usr/lib64/haproxy
 
 _build_zlib
-_build_brotli
-_build_zstd
+#_build_brotli
+#_build_zstd
 #_build_openssl33
 _build_openssl31quictls
 _build_libedit
