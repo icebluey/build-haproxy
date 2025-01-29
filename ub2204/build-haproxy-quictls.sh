@@ -645,6 +645,6 @@ _build_lua
 _build_haproxy
 
 echo
-echo ' build haproxy ub2204 done'
+echo ' build haproxy quictls ub2204 done'
 echo
 exit
