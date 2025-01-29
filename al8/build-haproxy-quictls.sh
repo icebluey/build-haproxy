@@ -250,8 +250,7 @@ _build_openssl31quictls() {
     --prefix=/usr \
     --libdir=/usr/lib64 \
     --openssldir=/etc/pki/tls \
-    enable-zlib enable-zstd enable-brotli \
-    enable-argon2 enable-tls1_3 threads \
+    enable-zlib enable-tls1_3 threads \
     enable-camellia enable-seed \
     enable-rfc3779 enable-sctp enable-cms \
     enable-ec enable-ecdh enable-ecdsa \
@@ -259,7 +258,7 @@ _build_openssl31quictls() {
     enable-poly1305 enable-ktls enable-quic \
     enable-md2 enable-rc5 \
     no-mdc2 no-ec2m \
-    no-sm2 no-sm2-precomp no-sm3 no-sm4 \
+    no-sm2 no-sm3 no-sm4 \
     shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
     perl configdata.pm --dump
     make -j$(nproc --all) all
