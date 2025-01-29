@@ -26,6 +26,12 @@ jobs:
           /bin/rm -fr /tmp/_output.tmp
           mkdir /tmp/_output.tmp
 
+      - name: Build haproxy al9
+        run: |
+          sudo bash run-build-al9.sh
+          sudo systemctl stop docker.socket docker.service containerd.service
+          sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
+
       - name: Build haproxy al8
         run: |
           sudo bash run-build-al8.sh
