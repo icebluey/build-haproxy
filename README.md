@@ -6,12 +6,23 @@ cat fullchain.crt server.key > haproxy.pem
 
 # Examples
 ```
-frontend mysite
-    bind :80
-    bind :443 ssl crt cert.pem alpn h2 ssl-min-ver TLSv1.3
-    bind quic4@:443 ssl crt cert.pem alpn h3 ssl-min-ver TLSv1.3
-    http-response set-header alt-svc "h3=\":443\";ma=86400;"
+frontend http3
+    mode http
+    bind :80,[::]:80
+    bind :443,[::]:443 ssl crt /home/haproxy.pem alpn h2 ssl-min-ver TLSv1.3
+    bind quic4@:443 ssl crt /home/haproxy.pem alpn h3 ssl-min-ver TLSv1.3
+    bind quic6@:443 ssl crt /home/haproxy.pem alpn h3 ssl-min-ver TLSv1.3
     http-request redirect scheme https unless { ssl_fc }
+    #http-request redirect scheme https code 301 unless { ssl_fc }
+    http-after-response add-header alt-svc 'h3=":443"; ma=60'
+
+    # HSTS
+    # max-age is mandatory 
+    # 16000000 seconds is a bit more than 6 months
+    http-response set-header Strict-Transport-Security "max-age=16000000; includeSubDomains; preload;"
+
+    default_backend app
+
     # acl acl名 condition
     acl acl名  req.ssl_sni -i 域名
     tcp-request inspect-delay 5s
