@@ -74,3 +74,11 @@ $AddUnixListenSocket /var/lib/haproxy/dev/log
 }
 ```
 
+```
+chown: invalid user: 'syslog:adm'
+
+apt install rsyslog
+ getent passwd syslog
+syslog:x:106:109::/home/syslog:/usr/sbin/nologin
+
+```
