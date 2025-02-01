@@ -6,6 +6,10 @@ cat fullchain.crt server.key > haproxy.pem
 
 # Examples
 ```
+
+global
+    ssl-default-bind-options ssl-min-ver TLSv1.3
+
 frontend http3
     mode http
     bind :80,[::]:80
