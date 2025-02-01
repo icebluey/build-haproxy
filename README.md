@@ -1,6 +1,7 @@
 # Concatenate the certificate files
 ```
-cat domain.crt middle.crt domain.key > haproxy.pem
+cat server.crt intermediateCA.crt > fullchain.crt
+cat fullchain.crt server.key > haproxy.pem
 ```
 
 # Examples
