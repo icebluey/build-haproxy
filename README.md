@@ -1,3 +1,10 @@
+# Run
+```
+el8 / el9
+dnf install -y libxcrypt glibc
+
+```
+
 # Concatenate the certificate files
 ```
 cat server.crt intermediateCA.crt > fullchain.crt
