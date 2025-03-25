@@ -1,6 +1,6 @@
 # Run
 ```
-el8 / el9
+# el8 / el9
 dnf install -y libxcrypt glibc
 
 ```
