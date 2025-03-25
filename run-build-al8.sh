@@ -21,7 +21,7 @@ docker exec al8 dnf install -y wget bash
 docker exec al8 /bin/bash -c 'ln -svf bash /bin/sh'
 docker exec al8 /bin/bash -c 'rm -fr /tmp/*'
 docker cp al8 al8:/home/
-docker exec al8 /bin/bash /home/al8/install-kernel.sh
+#docker exec al8 /bin/bash /home/al8/install-kernel.sh
 docker exec al8 /bin/bash /home/al8/.preinstall_al8
 docker exec al8 /bin/bash /home/al8/build-haproxy.sh
 _haproxy_ver="$(docker exec al8 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
@@ -47,7 +47,7 @@ docker exec al8 dnf install -y wget bash
 docker exec al8 /bin/bash -c 'ln -svf bash /bin/sh'
 docker exec al8 /bin/bash -c 'rm -fr /tmp/*'
 docker cp al8 al8:/home/
-docker exec al8 /bin/bash /home/al8/install-kernel.sh
+#docker exec al8 /bin/bash /home/al8/install-kernel.sh
 docker exec al8 /bin/bash /home/al8/.preinstall_al8
 docker exec al8 /bin/bash /home/al8/build-haproxy-quictls.sh
 _haproxy_ver="$(docker exec al8 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-quictls.*||g')"
