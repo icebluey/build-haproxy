@@ -540,10 +540,7 @@ rm -fr /usr/lib/x86_64-linux-gnu/haproxy
 _build_zlib
 #_build_brotli
 #_build_zstd
-#_build_openssl33
-#_build_openssl31quictls
 _build_openssl30quictls
-_build_libedit
 _build_pcre2
 _build_lua
 _build_haproxy
