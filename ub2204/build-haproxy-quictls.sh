@@ -178,46 +178,6 @@ _build_zstd() {
     /sbin/ldconfig
 }
 
-_build_libedit() {
-    /sbin/ldconfig >/dev/null 2>&1
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    _libedit_ver="$(wget -qO- 'https://www.thrysoee.dk/editline/' | grep libedit-[1-9].*\.tar | sed 's|"|\n|g' | grep '^libedit-[1-9]' | sed -e 's|\.tar.*||g' -e 's|libedit-||g' | sort -V | uniq | tail -n 1)"
-    wget -c -t 9 -T 9 "https://www.thrysoee.dk/editline/libedit-${_libedit_ver}.tar.gz"
-    tar -xof libedit-*.tar.*
-    sleep 1
-    rm -f libedit-*.tar*
-    cd libedit-*
-    sed -i "s/lncurses/ltinfo/" configure
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
-    ./configure \
-    --build=x86_64-linux-gnu \
-    --host=x86_64-linux-gnu \
-    --prefix=/usr \
-    --libdir=/usr/lib/x86_64-linux-gnu \
-    --includedir=/usr/include \
-    --sysconfdir=/etc \
-    --enable-shared --enable-static \
-    --enable-widec
-    sleep 1
-    make -j$(nproc --all) all
-    rm -fr /tmp/libedit
-    make install DESTDIR=/tmp/libedit
-    cd /tmp/libedit
-    _strip_files
-    install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
-    rm -f /usr/lib/x86_64-linux-gnu/libedit.*
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/libedit
-    /sbin/ldconfig
-}
-
 _build_pcre2() {
     /sbin/ldconfig
     set -e
@@ -234,11 +194,7 @@ _build_pcre2() {
     --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
     --enable-shared --enable-static \
     --enable-pcre2-8 --enable-pcre2-16 --enable-pcre2-32 \
-    --enable-jit \
-    --enable-pcre2grep-libz \
-    --enable-pcre2grep-libbz2 \
-    --enable-pcre2test-libedit \
-    --enable-unicode \
+    --enable-jit --enable-unicode \
     --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --includedir=/usr/include --sysconfdir=/etc
     sed 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' -i libtool
     make -j$(nproc --all) all
@@ -283,7 +239,7 @@ _build_openssl33() {
     enable-rfc3779 enable-sctp enable-cms \
     enable-ec enable-ecdh enable-ecdsa \
     enable-ec_nistp_64_gcc_128 \
-    enable-poly1305 enable-ktls enable-quic \
+    enable-poly1305 no-ktls enable-quic \
     enable-md2 enable-rc5 \
     no-mdc2 no-ec2m \
     no-sm2 no-sm2-precomp no-sm3 no-sm4 \
@@ -314,61 +270,6 @@ _build_openssl33() {
     /sbin/ldconfig
 }
 
-_build_openssl31quictls() {
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    git clone 'https://github.com/quictls/openssl.git'
-    cd openssl
-    _openssl31quictls_tag="$(git tag | grep -i quic | grep -i 'openssl-3\.1\.' | sort -V | tail -n 1)"
-    git checkout "${_openssl31quictls_tag}"
-    sleep 1
-    rm -fr .git
-    # Only for debian/ubuntu
-    sed '/define X509_CERT_FILE .*OPENSSLDIR "/s|"/cert.pem"|"/certs/ca-certificates.crt"|g' -i include/internal/cryptlib.h
-    sed '/install_docs:/s| install_html_docs||g' -i Configurations/unix-Makefile.tmpl
-    LDFLAGS='' ; LDFLAGS='-Wl,-z,relro -Wl,--as-needed -Wl,-z,now -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
-    HASHBANGPERL=/usr/bin/perl
-    ./Configure \
-    --prefix=/usr \
-    --libdir=/usr/lib/x86_64-linux-gnu \
-    --openssldir=/etc/ssl \
-    enable-zlib enable-tls1_3 threads \
-    enable-camellia enable-seed \
-    enable-rfc3779 enable-sctp enable-cms \
-    enable-ec enable-ecdh enable-ecdsa \
-    enable-ec_nistp_64_gcc_128 \
-    enable-poly1305 enable-ktls enable-quic \
-    enable-md2 enable-rc5 \
-    no-mdc2 no-ec2m \
-    no-sm2 no-sm3 no-sm4 \
-    shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
-    perl configdata.pm --dump
-    make -j$(nproc --all) all
-    rm -fr /tmp/openssl31quictls
-    make DESTDIR=/tmp/openssl31quictls install_sw
-    cd /tmp/openssl31quictls
-    # Only for debian/ubuntu
-    mkdir -p usr/include/x86_64-linux-gnu/openssl
-    chmod 0755 usr/include/x86_64-linux-gnu/openssl
-    install -c -m 0644 usr/include/openssl/opensslconf.h usr/include/x86_64-linux-gnu/openssl/
-    sed 's|http://|https://|g' -i usr/lib/x86_64-linux-gnu/pkgconfig/*.pc
-    _strip_files
-    install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
-    rm -fr /usr/include/openssl
-    rm -fr /usr/include/x86_64-linux-gnu/openssl
-    rm -fr /usr/local/openssl-1.1.1
-    rm -f /etc/ld.so.conf.d/openssl-1.1.1.conf
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/openssl31quictls
-    /sbin/ldconfig
-}
-
 _build_openssl30quictls() {
     set -e
     _tmp_dir="$(mktemp -d)"
@@ -393,7 +294,7 @@ _build_openssl30quictls() {
     enable-rfc3779 enable-sctp enable-cms \
     enable-ec enable-ecdh enable-ecdsa \
     enable-ec_nistp_64_gcc_128 \
-    enable-poly1305 enable-ktls enable-quic \
+    enable-poly1305 no-ktls enable-quic \
     enable-md2 enable-rc5 \
     no-mdc2 no-ec2m \
     no-sm2 no-sm3 no-sm4 \
@@ -693,9 +594,7 @@ _build_zlib
 #_build_brotli
 #_build_zstd
 #_build_openssl33
-#_build_openssl31quictls
 _build_openssl30quictls
-_build_libedit
 _build_pcre2
 _build_lua
 _build_haproxy
