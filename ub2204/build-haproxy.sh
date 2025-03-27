@@ -354,6 +354,7 @@ _build_haproxy() {
     done
     install -v -s -c -m 0755 admin/iprange/ip6range /tmp/haproxy/usr/bin/
     install -v -c -m 0644 admin/systemd/haproxy.service /tmp/haproxy/etc/haproxy/
+    sed -e '/Environment=/s| "PIDFILE=/.*/haproxy.pid"||g' -e '/ExecStart=/s| -p $PIDFILE||g' -i /tmp/haproxy/etc/haproxy/haproxy.service
     cp -pfr examples /tmp/haproxy/usr/share/doc/haproxy/
     install -c -m 0644 examples/errorfiles/*.http /tmp/haproxy/etc/haproxy/errors/
     cd /tmp/haproxy
