@@ -59,6 +59,26 @@ _strip_files() {
     echo
 }
 
+_install_go() {
+    set -e
+    _tmp_dir="$(mktemp -d)"
+    cd "${_tmp_dir}"
+    # Latest version of go
+    #_go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | tail -n 1)"
+
+    # go1.24.X
+    _go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | grep '^1\.24\.' | tail -n 1)"
+
+    wget -q -c -t 0 -T 9 "https://dl.google.com/go/go${_go_version}.linux-amd64.tar.gz"
+    rm -fr /usr/local/go
+    sleep 1
+    install -m 0755 -d /usr/local/go
+    tar -xof "go${_go_version}.linux-amd64.tar.gz" --strip-components=1 -C /usr/local/go/
+    sleep 1
+    cd /tmp
+    rm -fr "${_tmp_dir}"
+}
+
 _build_zlib() {
     /sbin/ldconfig
     set -e
@@ -243,6 +263,18 @@ _build_aws-lc() {
     sleep 1
     rm -f *.tar*
     cd aws*
+    # Go programming language
+    export GOROOT='/usr/local/go'
+    export GOPATH="$GOROOT/home"
+    export GOTMPDIR='/tmp'
+    export GOBIN="$GOROOT/bin"
+    export PATH="$GOROOT/bin:$PATH"
+    alias go="$GOROOT/bin/go"
+    alias gofmt="$GOROOT/bin/gofmt"
+    rm -fr ~/.cache/go-build
+    echo
+    go version
+    echo
     LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$ORIGIN'; export LDFLAGS
     cmake \
     -GNinja \
@@ -588,6 +620,7 @@ _build_zlib
 #_build_zstd
 #_build_openssl35
 
+_install_go
 _build_aws-lc
 
 _build_pcre2
