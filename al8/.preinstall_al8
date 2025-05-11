@@ -71,6 +71,9 @@ yum install -y cmake
 # to build nginx
 yum install -y glibc-devel libxml2-devel libxslt-devel perl-devel perl gd-devel bc
 
+# aws-lc
+dnf install -y cmake3 ninja-build clang perl
+
 yum install -y dracut ; yum update -y dracut
 echo 'diff --git a/module-setup.sh b/module-setup.sh
 index 38c244a..850bec7 100755
