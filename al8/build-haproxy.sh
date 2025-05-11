@@ -602,7 +602,7 @@ _build_haproxy() {
     echo
     sleep 2
     cd /tmp
-    openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz.sha256
+    sha256sum haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz > haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz.sha256
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/haproxy
     /sbin/ldconfig
