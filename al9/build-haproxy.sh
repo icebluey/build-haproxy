@@ -233,6 +233,51 @@ _build_openssl35() {
     /sbin/ldconfig
 }
 
+_build_aws-lc() {
+    set -e
+    _tmp_dir="$(mktemp -d)"
+    cd "${_tmp_dir}"
+    _aws_lc_tag="$(wget -qO- 'https://github.com/aws/aws-lc/tags' | grep -i 'href="/.*/releases/tag/' | sed 's|"|\n|g' | grep -i '/releases/tag/' | sed 's|.*/tag/||g' | sort -V | uniq | tail -n 1)"
+    wget -c -t 9 -T 9 "https://github.com/aws/aws-lc/archive/refs/tags/${_aws_lc_tag}.tar.gz"
+    tar -xof *.tar*
+    sleep 1
+    rm -f *.tar*
+    cd aws*
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$ORIGIN'; export LDFLAGS
+    cmake \
+    -GNinja \
+    -S "." \
+    -B "aws-lc-build" \
+    -DCMAKE_BUILD_TYPE='Release' \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+    -DINCLUDE_INSTALL_DIR:PATH=/usr/include \
+    -DLIB_INSTALL_DIR:PATH=/usr/lib64 \
+    -DSYSCONF_INSTALL_DIR:PATH=/etc \
+    -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
+    -DLIB_SUFFIX=64 \
+    -DBUILD_SHARED_LIBS:BOOL=ON \
+    -DCMAKE_INSTALL_SO_NO_EXE:INTERNAL=0
+    cmake --build "aws-lc-build" --parallel $(nproc --all) --verbose
+    rm -fr /tmp/aws-lc
+    DESTDIR="/tmp/aws-lc" cmake --install "aws-lc-build"
+    cd /tmp/aws-lc
+    sed 's|http://|https://|g' -i usr/lib64/pkgconfig/*.pc
+    _strip_files
+    install -m 0755 -d "${_private_dir}"
+    cp -af usr/lib64/*.so "${_private_dir}"/
+    rm -fr /usr/include/openssl
+    rm -vf /usr/lib64/libssl.so
+    rm -vf /usr/lib64/libcrypto.so
+    sleep 2
+    /bin/cp -afr * /
+    sleep 2
+    cd /tmp
+    rm -fr "${_tmp_dir}"
+    rm -fr /tmp/aws-lc
+    /sbin/ldconfig
+}
+
 _build_pcre2() {
     /sbin/ldconfig
     set -e
@@ -320,6 +365,7 @@ _build_haproxy() {
     USE_THREAD=1 \
     USE_NS=1 \
     USE_OPENSSL=1 \
+    USE_QUIC=1 \
     USE_ZLIB=1 \
     USE_TFO=1 \
     USE_LUA=1 \
@@ -538,9 +584,13 @@ dnf install -y patchelf
 rm -fr /usr/lib64/haproxy
 
 _build_zlib
-_build_brotli
-_build_zstd
-_build_openssl35
+
+#_build_brotli
+#_build_zstd
+#_build_openssl35
+
+_build_aws-lc
+
 _build_pcre2
 _build_lua
 _build_haproxy
