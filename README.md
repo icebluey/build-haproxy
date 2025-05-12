@@ -20,11 +20,11 @@ global
 frontend http
     mode http
     bind :80,[::]:80
-    bind :443,[::]:443 ssl crt /home/haproxy.pem alpn h2 ssl-min-ver TLSv1.3
-    bind quic4@:443 ssl crt /home/haproxy.pem alpn h3 ssl-min-ver TLSv1.3
-    bind quic6@:443 ssl crt /home/haproxy.pem alpn h3 ssl-min-ver TLSv1.3
-    http-request redirect scheme https unless { ssl_fc }
-    #http-request redirect scheme https code 301 unless { ssl_fc }
+    bind :443,[::]:443 ssl crt /home/haproxy1.pem crt /home/haproxy2.pem alpn h2 ssl-min-ver TLSv1.3
+    bind quic4@:443 ssl crt /home/haproxy1.pem crt /home/haproxy2.pem alpn h3 ssl-min-ver TLSv1.3
+    bind quic6@:443 ssl crt /home/haproxy1.pem crt /home/haproxy2.pem alpn h3 ssl-min-ver TLSv1.3
+    #http-request redirect scheme https unless { ssl_fc }
+    http-request redirect scheme https code 301 unless { ssl_fc }
     http-after-response add-header alt-svc 'h3=":443"; ma=60'
 
     # HSTS
@@ -41,7 +41,16 @@ frontend http
     tcp-request content accept if { req.ssl_hello_type 1 }
     use_backend 后端名1 if acl名
     default_backend 后端名2
+
+backend app
+    balance roundrobin | leastconn | hash
+    # ...
+    server 定义server的名字 ip:port check [sni req.ssl_sni] [maxconn 300] [ssl]
 backend 后端名1
+    balance roundrobin | leastconn | hash
+    # ...
+    server 定义server的名字 ip:port check [sni req.ssl_sni] [maxconn 300] [ssl]
+backend 后端名2
     balance roundrobin | leastconn | hash
     # ...
     server 定义server的名字 ip:port check [sni req.ssl_sni] [maxconn 300] [ssl]
