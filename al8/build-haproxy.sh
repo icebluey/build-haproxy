@@ -297,7 +297,9 @@ _build_aws-lc() {
     sed 's|http://|https://|g' -i usr/lib64/pkgconfig/*.pc
     _strip_files
     install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib64/*.so "${_private_dir}"/
+    cp -af usr/lib64/*.so* "${_private_dir}"/
+    rm -vf usr/bin/openssl
+    rm -vf usr/bin/c_rehash
     rm -fr /usr/include/openssl
     rm -vf /usr/lib64/libssl.so
     rm -vf /usr/lib64/libcrypto.so
