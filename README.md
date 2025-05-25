@@ -266,3 +266,51 @@ apt install rsyslog
 syslog:x:106:109::/home/syslog:/usr/sbin/nologin
 
 ```
+
+# libcrypto.so 需要使用证书 /etc/ssl/cert.pem
+## ubuntu 2004
+```
+root@a5a72b8fdd57:~# stat /etc/ssl
+  File: /etc/ssl
+  Size: 53        	Blocks: 0          IO Block: 4096   directory
+Device: 2dh/45d	Inode: 9586139     Links: 4
+Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2025-05-25 15:36:52.630739703 +0000
+Modify: 2025-05-25 15:36:09.278382907 +0000
+Change: 2025-05-25 15:36:09.278382907 +0000
+ Birth: -
+root@a5a72b8fdd57:~# ll /etc/ssl
+total 32
+drwxr-xr-x 4 root root    53 May 25 15:36 ./
+drwxr-xr-x 1 root root  4096 May 25 15:36 ../
+drwxr-xr-x 2 root root 12288 May 25 15:36 certs/
+-rw-r--r-- 1 root root 10909 Feb  5 13:26 openssl.cnf
+drwx------ 2 root root     6 Feb  5 13:26 private/
+root@a5a72b8fdd57:~# 
+
+# create /etc/ssl/cert.pem
+if [ -f /etc/ssl/certs/ca-certificates.crt ] && [ ! -e /etc/ssl/cert.pem ]; then ln -svf certs/ca-certificates.crt /etc/ssl/cert.pem; fi
+```
+
+## al9
+```
+bash-5.1# stat /etc/ssl
+  File: /etc/ssl
+  Size: 77        	Blocks: 0          IO Block: 4096   directory
+Device: 2fh/47d	Inode: 52487315    Links: 2
+Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2025-05-25 15:55:19.266836033 +0000
+Modify: 2025-05-20 21:02:02.000000000 +0000
+Change: 2025-05-25 15:55:19.245835861 +0000
+ Birth: 2025-05-25 15:55:13.854791675 +0000
+bash-5.1# ll /etc/ssl
+total 0
+drwxr-xr-x 2 root root 77 May 20 21:02 .
+drwxr-xr-x 1 root root 69 May 25 15:57 ..
+lrwxrwxrwx 1 root root 49 Aug 21  2024 cert.pem -> /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+lrwxrwxrwx 1 root root 18 Aug 21  2024 certs -> /etc/pki/tls/certs
+lrwxrwxrwx 1 root root 28 Aug 21  2024 ct_log_list.cnf -> /etc/pki/tls/ct_log_list.cnf
+lrwxrwxrwx 1 root root 24 Aug 21  2024 openssl.cnf -> /etc/pki/tls/openssl.cnf
+bash-5.1#
+# 默认已存在
+```
