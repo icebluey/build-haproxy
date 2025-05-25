@@ -338,6 +338,7 @@ _build_aws-lc() {
     rm -vf usr/bin/openssl
     rm -vf usr/bin/c_rehash
     rm -fr /usr/include/openssl
+    rm -fr /usr/include/x86_64-linux-gnu/openssl
     rm -vf /usr/lib/x86_64-linux-gnu/libssl.so
     rm -vf /usr/lib/x86_64-linux-gnu/libcrypto.so
     sleep 2
