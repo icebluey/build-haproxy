@@ -29,6 +29,7 @@ mkdir -p /tmp/_output.tmp
 docker cp al9:/tmp/haproxy-"${_haproxy_ver}"-1_el9_amd64.tar.xz /tmp/_output.tmp/
 docker cp al9:/tmp/haproxy-"${_haproxy_ver}"-1_el9_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
+exit
 sleep 2
 docker stop al9 || true
 sleep 2

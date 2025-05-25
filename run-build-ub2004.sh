@@ -30,6 +30,7 @@ mkdir -p /tmp/_output.tmp
 docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz /tmp/_output.tmp/
 docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
+exit
 sleep 2
 docker stop ub2004 || true
 sleep 2

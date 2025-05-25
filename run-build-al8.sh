@@ -29,6 +29,7 @@ mkdir -p /tmp/_output.tmp
 docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz /tmp/_output.tmp/
 docker cp al8:/tmp/haproxy-"${_haproxy_ver}"-1_el8_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
+exit
 sleep 2
 docker stop al8 || true
 sleep 2
