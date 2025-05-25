@@ -588,6 +588,8 @@ _build_haproxy() {
     sleep 1
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
     systemctl restart logrotate.service >/dev/null 2>&1 || : 
+    # create /etc/ssl/cert.pem
+    if [ -f /etc/ssl/certs/ca-certificates.crt ] && [ ! -e /etc/ssl/cert.pem ]; then ln -svf certs/ca-certificates.crt /etc/ssl/cert.pem; fi
     ' > etc/haproxy/.install.txt
     sed 's|^    ||g' -i etc/haproxy/.install.txt
 
