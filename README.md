@@ -292,6 +292,29 @@ root@a5a72b8fdd57:~#
 if [ -f /etc/ssl/certs/ca-certificates.crt ] && [ ! -e /etc/ssl/cert.pem ]; then ln -sv certs/ca-certificates.crt /etc/ssl/cert.pem; fi
 ```
 
+## al8
+```
+[root@ee4c17fc9578 ~]# stat /etc/ssl
+  File: /etc/ssl
+  Size: 6         	Blocks: 0          IO Block: 4096   directory
+Device: 31h/49d	Inode: 33696736    Links: 1
+Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2025-05-25 16:19:26.117726203 +0000
+Modify: 2025-05-25 16:22:56.228461041 +0000
+Change: 2025-05-25 16:22:56.228461041 +0000
+ Birth: 2025-05-25 16:18:26.790237804 +0000
+[root@ee4c17fc9578 ~]# ll /etc/ssl
+total 0
+drwxr-xr-x 1 root root  6 May 25 16:22 .
+drwxr-xr-x 1 root root 80 May 25 16:13 ..
+lrwxrwxrwx 1 root root 16 Aug 21  2024 certs -> ../pki/tls/certs
+[root@ee4c17fc9578 ~]# 
+
+# create /etc/ssl/cert.pem
+if [ -d /etc/ssl ] && [ ! -e /etc/ssl/cert.pem ] && [ -e /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
+#if [ -d /etc/ssl ] && [ ! -e /etc/ssl/cert.pem ] && [ -e /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv ../pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
+```
+
 ## al9
 ```
 bash-5.1# stat /etc/ssl
