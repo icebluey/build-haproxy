@@ -586,8 +586,8 @@ _build_haproxy() {
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
     systemctl restart logrotate.service >/dev/null 2>&1 || : 
     # create /etc/ssl/cert.pem
-    if [ -d /etc/ssl ] && [ ! -f /etc/ssl/cert.pem ] && [ -f /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
-    #if [ -d /etc/ssl ] && [ ! -f /etc/ssl/cert.pem ] && [ -f /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv ../pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
+    if [ -d /etc/ssl ] && [ ! -e /etc/ssl/cert.pem ] && [ -e /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
+    #if [ -d /etc/ssl ] && [ ! -e /etc/ssl/cert.pem ] && [ -e /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem ]; then ln -sv ../pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem; fi
     ' > etc/haproxy/.install.txt
     sed 's|^    ||g' -i etc/haproxy/.install.txt
 
