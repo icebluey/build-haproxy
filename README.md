@@ -289,7 +289,7 @@ drwx------ 2 root root     6 Feb  5 13:26 private/
 root@a5a72b8fdd57:~# 
 
 # create /etc/ssl/cert.pem
-if [ -f /etc/ssl/certs/ca-certificates.crt ] && [ ! -e /etc/ssl/cert.pem ]; then ln -svf certs/ca-certificates.crt /etc/ssl/cert.pem; fi
+if [ -f /etc/ssl/certs/ca-certificates.crt ] && [ ! -e /etc/ssl/cert.pem ]; then ln -sv certs/ca-certificates.crt /etc/ssl/cert.pem; fi
 ```
 
 ## al9
