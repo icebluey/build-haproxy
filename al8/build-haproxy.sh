@@ -398,7 +398,7 @@ _build_haproxy() {
     USE_PCRE2_JIT=1 \
     USE_THREAD=1 \
     USE_NS=1 \
-    USE_OPENSSL=1 \
+    USE_OPENSSL_AWSLC=1 \
     USE_QUIC=1 \
     USE_ZLIB=1 \
     USE_TFO=1 \
