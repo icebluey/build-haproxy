@@ -28,6 +28,7 @@ docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz /tmp/_outp
 docker cp ub2204:/tmp/haproxy-"${_haproxy_ver}"-1_ub2204_amd64.tar.xz.sha256 /tmp/_output.tmp/
 
 exit
+
 sleep 2
 docker stop ub2204 || true
 sleep 2
