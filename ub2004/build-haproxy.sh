@@ -608,11 +608,11 @@ _build_haproxy() {
     rm -fr lib
     echo
     sleep 2
-    tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz *
+    tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2004_amd64.tar.xz *
     echo
     sleep 2
     cd /tmp
-    openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz.sha256
+    openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2004_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2004_amd64.tar.xz.sha256
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/haproxy
     /sbin/ldconfig
