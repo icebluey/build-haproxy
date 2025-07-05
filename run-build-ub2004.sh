@@ -25,10 +25,9 @@ docker exec ub2004 /bin/rm -f /tmp/.setup_env_ub2004
 docker exec ub2004 /bin/bash -c '/bin/rm -fr /tmp/*'
 docker cp ub2004 ub2004:/home/
 docker exec ub2004 /bin/bash /home/ub2004/build-haproxy.sh
-_haproxy_ver="$(docker exec ub2004 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
+#_haproxy_ver="$(docker exec ub2004 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
 mkdir -p /tmp/_output.tmp
-docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz /tmp/_output.tmp/
-docker cp ub2004:/tmp/haproxy-"${_haproxy_ver}"-1_ub2004_amd64.tar.xz.sha256 /tmp/_output.tmp/
+for i in $(docker exec ub2004 ls -1 /tmp/ | grep -i '^haproxy.*\.tar'); do docker cp ub2004:/tmp/$i /tmp/_output.tmp/ ; done
 
 exit
 
