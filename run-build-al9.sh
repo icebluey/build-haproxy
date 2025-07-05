@@ -24,10 +24,9 @@ docker cp al9 al9:/home/
 docker exec al9 /bin/bash /home/al9/install-kernel.sh
 docker exec al9 /bin/bash /home/al9/.preinstall_al9
 docker exec al9 /bin/bash /home/al9/build-haproxy.sh
-_haproxy_ver="$(docker exec al9 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
+#_haproxy_ver="$(docker exec al9 ls -1 /tmp/ | grep -i '^haproxy.*xz$' | sed -e 's|haproxy-||g' -e 's|-[0-1]_.*||g')"
 mkdir -p /tmp/_output.tmp
-docker cp al9:/tmp/haproxy-"${_haproxy_ver}"-1_el9_amd64.tar.xz /tmp/_output.tmp/
-docker cp al9:/tmp/haproxy-"${_haproxy_ver}"-1_el9_amd64.tar.xz.sha256 /tmp/_output.tmp/
+for i in $(docker exec al9 ls -1 /tmp/ | grep -i '^haproxy.*\.tar'); do docker cp al8:/tmp/$i /tmp/_output.tmp/ ; done
 
 exit
 
