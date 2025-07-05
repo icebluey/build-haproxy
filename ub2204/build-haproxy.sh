@@ -490,10 +490,6 @@ _build_haproxy() {
         # turn on stats unix socket
         stats socket /var/lib/haproxy/stats
     
-        # utilize system-wide crypto-policies
-        ssl-default-bind-ciphers PROFILE=SYSTEM
-        ssl-default-server-ciphers PROFILE=SYSTEM
-    
     #---------------------------------------------------------------------
     # common defaults that all the '\''listen'\'' and '\''backend'\'' sections will
     # use if not designated in their block
