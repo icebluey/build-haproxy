@@ -11,6 +11,15 @@ cat server.crt intermediateCA.crt > fullchain.crt
 cat fullchain.crt server.key > haproxy.pem
 ```
 
+```
+# 302 Found (临时移动)
+http-request redirect scheme https unless { ssl_fc }
+
+# 301 Moved Permanently (永久移动)
+http-request redirect scheme https code 301 unless { ssl_fc }
+
+```
+
 # Examples
 ```
 
