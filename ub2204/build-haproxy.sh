@@ -33,30 +33,25 @@ _strip_files() {
     find usr/ -type f -iname '*.la' -delete
     if [[ -d usr/share/man ]]; then
         find -L usr/share/man/ -type l -exec rm -f '{}' \;
-        sleep 2
+        sleep 1
         find usr/share/man/ -type f -iname '*.[1-9]' -exec gzip -f -9 '{}' \;
-        sleep 2
-        find -L usr/share/man/ -type l | while read file; do ln -svf "$(readlink -s "${file}").gz" "${file}.gz" ; done
-        sleep 2
+        sleep 1
+        find -L usr/share/man/ -type l | while read file; do ln -sf "$(readlink -s "${file}").gz" "${file}.gz" ; done
+        sleep 1
         find -L usr/share/man/ -type l -exec rm -f '{}' \;
     fi
-    if [[ -d usr/lib/x86_64-linux-gnu ]]; then
-        find usr/lib/x86_64-linux-gnu/ -type f \( -iname '*.so' -or -iname '*.so.*' \) | xargs --no-run-if-empty -I '{}' chmod 0755 '{}'
-        find usr/lib/x86_64-linux-gnu/ -iname 'lib*.so*' -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-        find usr/lib/x86_64-linux-gnu/ -iname '*.so' -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-    fi
-    if [[ -d usr/lib64 ]]; then
-        find usr/lib64/ -type f \( -iname '*.so' -or -iname '*.so.*' \) | xargs --no-run-if-empty -I '{}' chmod 0755 '{}'
-        find usr/lib64/ -iname 'lib*.so*' -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-        find usr/lib64/ -iname '*.so' -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-    fi
-    if [[ -d usr/sbin ]]; then
-        find usr/sbin/ -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-    fi
-    if [[ -d usr/bin ]]; then
-        find usr/bin/ -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
-    fi
-    echo
+    for libroot in usr/lib/x86_64-linux-gnu usr/lib64; do
+        [[ -d "$libroot" ]] || continue
+        find "$libroot" -type f \( -iname '*.so' -or -iname '*.so.*' \) | xargs --no-run-if-empty -I '{}' chmod 0755 '{}'
+        find "$libroot" -type f -iname 'lib*.so*' -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' strip '{}'
+        find "$libroot" -type f -iname '*.so' -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' strip '{}'
+    done
+    for binroot in usr/sbin usr/bin; do
+        [[ -d "$binroot" ]] || continue
+        find "$binroot" -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' strip '{}'
+    done
+    libroot=''
+    binroot=''
 }
 
 _install_go() {
@@ -100,9 +95,9 @@ _build_zlib() {
     cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
     /bin/rm -f /usr/lib/x86_64-linux-gnu/libz.so*
     /bin/rm -f /usr/lib/x86_64-linux-gnu/libz.a
-    sleep 2
+    sleep 1
     /bin/cp -afr * /
-    sleep 2
+    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/zlib
@@ -160,9 +155,9 @@ _build_aws-lc() {
     rm -fr /usr/include/x86_64-linux-gnu/openssl
     rm -vf /usr/lib/x86_64-linux-gnu/libssl.so
     rm -vf /usr/lib/x86_64-linux-gnu/libcrypto.so
-    sleep 2
+    sleep 1
     /bin/cp -afr * /
-    sleep 2
+    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/aws-lc
@@ -196,9 +191,12 @@ _build_pcre2() {
     _strip_files
     install -m 0755 -d "${_private_dir}"
     cp -af usr/lib/x86_64-linux-gnu/*.so* "${_private_dir}"/
-    sleep 2
+    rm -f "${_private_dir}"/libpcre2-16.*
+    rm -f "${_private_dir}"/libpcre2-32.*
+    rm -f "${_private_dir}"/libpcre2-posix.*
+    sleep 1
     /bin/cp -afr * /
-    sleep 2
+    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/pcre2
@@ -223,7 +221,7 @@ _build_lua() {
     rm -f /usr/lib/x86_64-linux-gnu/liblua.a
     rm -f /usr/lib/x86_64-linux-gnu/liblua-*
     make install
-    sleep 2
+    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     /sbin/ldconfig
@@ -378,10 +376,10 @@ _build_haproxy() {
     rm -fr var
     rm -fr lib
     echo
-    sleep 2
+    sleep 1
     tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2204_amd64.tar.xz *
     echo
-    sleep 2
+    sleep 1
     cd /tmp
     openssl dgst -r -sha256 haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2204_amd64.tar.xz | sed 's|\*| |g' > haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_ub2204_amd64.tar.xz.sha256
     rm -fr "${_tmp_dir}"
