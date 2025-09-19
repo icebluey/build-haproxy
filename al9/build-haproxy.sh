@@ -66,8 +66,8 @@ _install_go() {
     # Latest version of go
     #_go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | tail -n 1)"
 
-    # go1.24.X
-    _go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | grep '^1\.24\.' | tail -n 1)"
+    # go1.25.X
+    _go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | grep '^1\.25\.' | tail -n 1)"
 
     wget -q -c -t 0 -T 9 "https://dl.google.com/go/go${_go_version}.linux-amd64.tar.gz"
     rm -fr /usr/local/go
@@ -109,150 +109,6 @@ _build_zlib() {
     /sbin/ldconfig
 }
 
-_build_brotli() {
-    /sbin/ldconfig
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    git clone --recursive 'https://github.com/google/brotli.git' brotli
-    cd brotli
-    rm -fr .git
-    if [[ -f bootstrap ]]; then
-        ./bootstrap
-        rm -fr autom4te.cache
-        LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
-        ./configure \
-        --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
-        --enable-shared --disable-static \
-        --prefix=/usr --libdir=/usr/lib64 --includedir=/usr/include --sysconfdir=/etc
-        make -j$(nproc --all) all
-        rm -fr /tmp/brotli
-        make install DESTDIR=/tmp/brotli
-    else
-        LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$ORIGIN'; export LDFLAGS
-        cmake \
-        -S "." \
-        -B "build" \
-        -DCMAKE_BUILD_TYPE='Release' \
-        -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-        -DCMAKE_INSTALL_PREFIX:PATH=/usr \
-        -DINCLUDE_INSTALL_DIR:PATH=/usr/include \
-        -DLIB_INSTALL_DIR:PATH=/usr/lib64 \
-        -DSYSCONF_INSTALL_DIR:PATH=/etc \
-        -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
-        -DLIB_SUFFIX=64 \
-        -DBUILD_SHARED_LIBS:BOOL=ON \
-        -DCMAKE_INSTALL_SO_NO_EXE:INTERNAL=0
-        cmake --build "build" --parallel $(nproc --all) --verbose
-        rm -fr /tmp/brotli
-        DESTDIR="/tmp/brotli" cmake --install "build"
-    fi
-    cd /tmp/brotli
-    _strip_files
-    install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib64/*.so* "${_private_dir}"/
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/brotli
-    /sbin/ldconfig
-}
-
-_build_zstd() {
-    /sbin/ldconfig
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    git clone --recursive "https://github.com/facebook/zstd.git"
-    cd zstd
-    rm -fr .git
-    sed '/^PREFIX/s|= .*|= /usr|g' -i Makefile
-    sed '/^LIBDIR/s|= .*|= /usr/lib64|g' -i Makefile
-    sed '/^prefix/s|= .*|= /usr|g' -i Makefile
-    sed '/^libdir/s|= .*|= /usr/lib64|g' -i Makefile
-    sed '/^PREFIX/s|= .*|= /usr|g' -i lib/Makefile
-    sed '/^LIBDIR/s|= .*|= /usr/lib64|g' -i lib/Makefile
-    sed '/^prefix/s|= .*|= /usr|g' -i lib/Makefile
-    sed '/^libdir/s|= .*|= /usr/lib64|g' -i lib/Makefile
-    sed '/^PREFIX/s|= .*|= /usr|g' -i programs/Makefile
-    #sed '/^LIBDIR/s|= .*|= /usr/lib64|g' -i programs/Makefile
-    sed '/^prefix/s|= .*|= /usr|g' -i programs/Makefile
-    #sed '/^libdir/s|= .*|= /usr/lib64|g' -i programs/Makefile
-    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$OOORIGIN'; export LDFLAGS
-    #make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib64
-    make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib64 -C lib lib-mt
-    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
-    make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib64 -C programs
-    make -j$(nproc --all) V=1 prefix=/usr libdir=/usr/lib64 -C contrib/pzstd
-    rm -fr /tmp/zstd
-    make install DESTDIR=/tmp/zstd
-    install -v -c -m 0755 contrib/pzstd/pzstd /tmp/zstd/usr/bin/
-    cd /tmp/zstd
-    ln -svf zstd.1 usr/share/man/man1/pzstd.1
-    _strip_files
-    find usr/lib64/ -type f -iname '*.so*' | xargs -I '{}' chrpath -r '$ORIGIN' '{}'
-    install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib64/*.so* "${_private_dir}"/
-    rm -f /usr/lib64/libzstd.*
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/zstd
-    /sbin/ldconfig
-}
-
-_build_openssl35() {
-    set -e
-    _tmp_dir="$(mktemp -d)"
-    cd "${_tmp_dir}"
-    _openssl35_ver="$(wget -qO- 'https://openssl-library.org/source/index.html' | grep 'openssl-3\.5\.' | sed 's|"|\n|g' | sed 's|/|\n|g' | grep -i '^openssl-3\.5\..*\.tar\.gz$' | cut -d- -f2 | sed 's|\.tar.*||g' | sort -V | uniq | tail -n 1)"
-    wget -c -t 9 -T 9 https://github.com/openssl/openssl/releases/download/openssl-${_openssl35_ver}/openssl-${_openssl35_ver}.tar.gz
-    tar -xof openssl-*.tar*
-    sleep 1
-    rm -f openssl-*.tar*
-    cd openssl-*
-    sed '/install_docs:/s| install_html_docs||g' -i Configurations/unix-Makefile.tmpl
-    LDFLAGS=''; LDFLAGS='-Wl,-z,relro -Wl,--as-needed -Wl,-z,now -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
-    HASHBANGPERL=/usr/bin/perl
-    ./Configure \
-    --prefix=/usr \
-    --libdir=/usr/lib64 \
-    --openssldir=/etc/pki/tls \
-    enable-zlib enable-zstd enable-brotli \
-    enable-argon2 enable-tls1_3 threads \
-    enable-camellia enable-seed \
-    enable-rfc3779 enable-sctp enable-cms \
-    enable-ec enable-ecdh enable-ecdsa \
-    enable-ec_nistp_64_gcc_128 \
-    enable-poly1305 enable-ktls enable-quic \
-    enable-md2 enable-rc5 \
-    no-mdc2 no-ec2m \
-    no-sm2 no-sm2-precomp no-sm3 no-sm4 \
-    shared linux-x86_64 '-DDEVRANDOM="\"/dev/urandom\""'
-    perl configdata.pm --dump
-    make -j$(nproc --all) all
-    rm -fr /tmp/openssl35
-    make DESTDIR=/tmp/openssl35 install_sw
-    cd /tmp/openssl35
-    sed 's|http://|https://|g' -i usr/lib64/pkgconfig/*.pc
-    _strip_files
-    install -m 0755 -d "${_private_dir}"
-    cp -af usr/lib64/*.so* "${_private_dir}"/
-    rm -fr /usr/include/openssl
-    rm -fr /usr/include/x86_64-linux-gnu/openssl
-    sleep 2
-    /bin/cp -afr * /
-    sleep 2
-    cd /tmp
-    rm -fr "${_tmp_dir}"
-    rm -fr /tmp/openssl35
-    /sbin/ldconfig
-}
-
 _build_aws-lc() {
     set -e
     _tmp_dir="$(mktemp -d)"
@@ -275,7 +131,7 @@ _build_aws-lc() {
     echo
     go version
     echo
-    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$ORIGIN'; export LDFLAGS
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,--disable-new-dtags -Wl,-rpath,\$ORIGIN'; export LDFLAGS
     cmake \
     -GNinja \
     -S "." \
@@ -323,7 +179,7 @@ _build_pcre2() {
     sleep 1
     rm -f pcre2-*.tar*
     cd pcre2-*
-    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,--disable-new-dtags -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
     ./configure \
     --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
     --enable-shared --enable-static \
@@ -377,8 +233,6 @@ _build_haproxy() {
     set -e
     _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    # 3.1
-    #_haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.1' | sort -V | tail -n 1)"
     # 3.2
     _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.2' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.haproxy.org/download/${_haproxy_ver%.*}/src/haproxy-${_haproxy_ver}.tar.gz"
@@ -412,8 +266,6 @@ _build_haproxy() {
     ADDLIB="-lz -ldl -pthread" \
     LDFLAGS="${LDFLAGS}"
 
-    #USE_QUIC=1 \
-    #EXTRA_OBJS="addons/promex/service-prometheus.o"
     echo
     LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}" ; export LDFLAGS
     make admin/halog/halog SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
@@ -522,8 +374,8 @@ _build_haproxy() {
     install -m 0755 -d usr/lib64/haproxy
     cp -afr /usr/lib64/haproxy/private usr/lib64/haproxy/
     # el9 patchelf 0.15.0
-    #patchelf --set-rpath '$ORIGIN/../lib64/haproxy/private' usr/sbin/haproxy
-    patchelf --add-rpath '$ORIGIN/../lib64/haproxy/private' usr/sbin/haproxy
+    #patchelf --force-rpath --set-rpath '$ORIGIN/../lib64/haproxy/private' usr/sbin/haproxy
+    patchelf --force-rpath --add-rpath '$ORIGIN/../lib64/haproxy/private' usr/sbin/haproxy
     rm -fr var
     rm -fr lib
     echo
@@ -545,10 +397,6 @@ dnf install -y patchelf
 rm -fr /usr/lib64/haproxy
 
 _build_zlib
-
-#_build_brotli
-#_build_zstd
-#_build_openssl35
 
 _install_go
 _build_aws-lc
