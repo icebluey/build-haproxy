@@ -56,7 +56,7 @@ _strip_files() {
 
 _install_go() {
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     # Latest version of go
     #_go_version="$(wget -qO- 'https://golang.org/dl/' | grep -i 'linux-amd64\.tar\.' | sed 's/"/\n/g' | grep -i 'linux-amd64\.tar\.' | cut -d/ -f3 | grep -i '\.gz$' | sed 's/go//g; s/.linux-amd64.tar.gz//g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | tail -n 1)"
@@ -77,7 +77,7 @@ _install_go() {
 _build_zlib() {
     /sbin/ldconfig
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _zlib_ver="$(wget -qO- 'https://www.zlib.net/' | grep 'zlib-[1-9].*\.tar\.' | sed -e 's|"|\n|g' | grep '^zlib-[1-9]' | sed -e 's|\.tar.*||g' -e 's|zlib-||g' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.zlib.net/zlib-${_zlib_ver}.tar.gz"
@@ -106,7 +106,7 @@ _build_zlib() {
 
 _build_aws-lc() {
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _aws_lc_tag="$(wget -qO- 'https://github.com/aws/aws-lc/tags' | grep -i 'href="/.*/releases/tag/' | sed 's|"|\n|g' | grep -i '/releases/tag/' | sed 's|.*/tag/||g' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://github.com/aws/aws-lc/archive/refs/tags/${_aws_lc_tag}.tar.gz"
@@ -167,7 +167,7 @@ _build_aws-lc() {
 _build_pcre2() {
     /sbin/ldconfig
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _pcre2_ver="$(wget -qO- 'https://github.com/PCRE2Project/pcre2/releases' | grep -i 'pcre2-[1-9]' | sed 's|"|\n|g' | grep -i '^/PCRE2Project/pcre2/tree' | sed 's|.*/pcre2-||g' | sed 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${_pcre2_ver}/pcre2-${_pcre2_ver}.tar.bz2"
@@ -175,7 +175,7 @@ _build_pcre2() {
     sleep 1
     rm -f pcre2-*.tar*
     cd pcre2-*
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,--disable-new-dtags -Wl,-rpath,\$$ORIGIN' ; export LDFLAGS
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,--disable-new-dtags -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
     ./configure \
     --build=x86_64-linux-gnu --host=x86_64-linux-gnu \
     --enable-shared --enable-static \
@@ -206,7 +206,7 @@ _build_pcre2() {
 _build_lua() {
     /sbin/ldconfig
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _lua_ver="$(wget -qO- 'https://www.lua.org/ftp/' | grep -i '<a href' | sed 's/"/ /g' | sed 's/ /\n/g' | grep -i '^lua-[1-9].*\.tar\.gz$' | sed -e 's|lua-||g' -e 's|\.tar.*||g' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.lua.org/ftp/lua-${_lua_ver}.tar.gz"
@@ -230,7 +230,7 @@ _build_lua() {
 _build_haproxy() {
     /sbin/ldconfig
     set -e
-    _tmp_dir="$(mktemp -d)"
+    local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     # 3.2
     _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.2' | sort -V | tail -n 1)"
@@ -239,8 +239,7 @@ _build_haproxy() {
     sleep 1
     rm -f haproxy-*.tar*
     cd haproxy*
-    LDFLAGS=''
-    LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
     sed 's|http://|https://|g' -i include/haproxy/version.h
     sed '/DOCDIR =/s@$(PREFIX)/doc@$(PREFIX)/share/doc@g' -i Makefile
     sed 's#^PREFIX = /usr.*#PREFIX = /usr#g' -i Makefile
@@ -265,8 +264,7 @@ _build_haproxy() {
     ADDLIB="-lz -ldl -pthread" \
     LDFLAGS="${LDFLAGS}"
 
-    echo
-    LDFLAGS='' ; LDFLAGS="${_ORIG_LDFLAGS}" ; export LDFLAGS
+    LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
     make admin/halog/halog SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
     for admin in iprange; do
         make -C admin/$admin SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
@@ -396,10 +394,8 @@ apt install -y cmake ninja-build clang perl
 rm -fr /usr/lib/x86_64-linux-gnu/haproxy
 
 _build_zlib
-
 _install_go
 _build_aws-lc
-
 _build_pcre2
 _build_lua
 _build_haproxy
