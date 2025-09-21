@@ -50,7 +50,7 @@ yum install -y asciidoc audit-libs-devel bash bc binutils binutils-devel bison b
   libcap-devel libcap-ng-devel libnl3-devel libtraceevent-devel m4 make ncurses-devel net-tools newt-devel \
   nss-tools numactl-devel openssl openssl-devel patch pciutils-devel perl-Carp perl-ExtUtils-Embed perl-devel \
   perl-generators perl-interpreter pesign python3-devel python3-docutils python3-sphinx python3-sphinx_rtd_theme \
-  redhat-rpm-config rsync system-sb-certs tar which xmlto xz xz-devel zlib-devel
+  redhat-rpm-config rsync tar which xmlto xz xz-devel zlib-devel
 
 yum install -y libmnl-devel libmnl
 yum install -y libnftnl-devel libnftnl
