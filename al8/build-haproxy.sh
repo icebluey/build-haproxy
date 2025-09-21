@@ -16,7 +16,7 @@ export CXX
 
 _private_dir='usr/lib64/haproxy/private'
 
-set -e
+set -euo pipefail
 
 _strip_files() {
     if [[ "$(pwd)" = '/' ]]; then
@@ -33,11 +33,8 @@ _strip_files() {
     find usr/ -type f -iname '*.la' -delete
     if [[ -d usr/share/man ]]; then
         find -L usr/share/man/ -type l -exec rm -f '{}' \;
-        sleep 1
         find usr/share/man/ -type f -iname '*.[1-9]' -exec gzip -f -9 '{}' \;
-        sleep 1
         find -L usr/share/man/ -type l | while read file; do ln -sf "$(readlink -s "${file}").gz" "${file}.gz" ; done
-        sleep 1
         find -L usr/share/man/ -type l -exec rm -f '{}' \;
     fi
     for libroot in usr/lib/x86_64-linux-gnu usr/lib64; do
@@ -55,7 +52,7 @@ _strip_files() {
 }
 
 _install_go() {
-    set -e
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     # Latest version of go
@@ -66,23 +63,20 @@ _install_go() {
 
     wget -q -c -t 0 -T 9 "https://dl.google.com/go/go${_go_version}.linux-amd64.tar.gz"
     rm -fr /usr/local/go
-    sleep 1
     install -m 0755 -d /usr/local/go
     tar -xof "go${_go_version}.linux-amd64.tar.gz" --strip-components=1 -C /usr/local/go/
-    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
 }
 
 _build_zlib() {
     /sbin/ldconfig
-    set -e
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _zlib_ver="$(wget -qO- 'https://www.zlib.net/' | grep 'zlib-[1-9].*\.tar\.' | sed -e 's|"|\n|g' | grep '^zlib-[1-9]' | sed -e 's|\.tar.*||g' -e 's|zlib-||g' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.zlib.net/zlib-${_zlib_ver}.tar.gz"
-    tar -xof zlib-*.tar.*
-    sleep 1
+    tar -xof zlib-*.tar*
     rm -f zlib-*.tar*
     cd zlib-*
     ./configure --prefix=/usr --libdir=/usr/lib64 --includedir=/usr/include --64
@@ -95,9 +89,7 @@ _build_zlib() {
     cp -af usr/lib64/*.so* "${_private_dir}"/
     /bin/rm -f /usr/lib64/libz.so*
     /bin/rm -f /usr/lib64/libz.a
-    sleep 1
     /bin/cp -afr * /
-    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/zlib
@@ -105,13 +97,13 @@ _build_zlib() {
 }
 
 _build_aws-lc() {
-    set -e
+    _install_go
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _aws_lc_tag="$(wget -qO- 'https://github.com/aws/aws-lc/tags' | grep -i 'href="/.*/releases/tag/' | sed 's|"|\n|g' | grep -i '/releases/tag/' | sed 's|.*/tag/||g' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://github.com/aws/aws-lc/archive/refs/tags/${_aws_lc_tag}.tar.gz"
     tar -xof *.tar*
-    sleep 1
     rm -f *.tar*
     cd aws*
     # Go programming language
@@ -154,9 +146,7 @@ _build_aws-lc() {
     rm -fr /usr/include/openssl
     rm -vf /usr/lib64/libssl.so
     rm -vf /usr/lib64/libcrypto.so
-    sleep 1
     /bin/cp -afr * /
-    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/aws-lc
@@ -165,13 +155,12 @@ _build_aws-lc() {
 
 _build_pcre2() {
     /sbin/ldconfig
-    set -e
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _pcre2_ver="$(wget -qO- 'https://github.com/PCRE2Project/pcre2/releases' | grep -i 'pcre2-[1-9]' | sed 's|"|\n|g' | grep -i '^/PCRE2Project/pcre2/tree' | sed 's|.*/pcre2-||g' | sed 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc' | sort -V | uniq | tail -n 1)"
     wget -c -t 9 -T 9 "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${_pcre2_ver}/pcre2-${_pcre2_ver}.tar.bz2"
-    tar -xof pcre2-${_pcre2_ver}.tar.*
-    sleep 1
+    tar -xof pcre2-${_pcre2_ver}.tar*
     rm -f pcre2-*.tar*
     cd pcre2-*
     LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"' -Wl,--disable-new-dtags -Wl,-rpath,\$$ORIGIN'; export LDFLAGS
@@ -193,9 +182,7 @@ _build_pcre2() {
     rm -f "${_private_dir}"/libpcre2-16.*
     rm -f "${_private_dir}"/libpcre2-32.*
     rm -f "${_private_dir}"/libpcre2-posix.*
-    sleep 1
     /bin/cp -afr * /
-    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     rm -fr /tmp/pcre2
@@ -204,13 +191,12 @@ _build_pcre2() {
 
 _build_lua() {
     /sbin/ldconfig
-    set -e
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _lua_ver="$(wget -qO- 'https://www.lua.org/ftp/' | grep -i '<a href' | sed 's/"/ /g' | sed 's/ /\n/g' | grep -i '^lua-[1-9].*\.tar\.gz$' | sed -e 's|lua-||g' -e 's|\.tar.*||g' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.lua.org/ftp/lua-${_lua_ver}.tar.gz"
     tar -xof lua-*.tar*
-    sleep 1
     rm -f lua-*.tar*
     cd lua-*
     sed 's#INSTALL_TOP=.*#INSTALL_TOP= /usr#g' -i Makefile
@@ -220,7 +206,6 @@ _build_lua() {
     rm -f /usr/lib64/liblua.a
     rm -f /usr/lib64/liblua-*
     make install
-    sleep 1
     cd /tmp
     rm -fr "${_tmp_dir}"
     /sbin/ldconfig
@@ -228,14 +213,13 @@ _build_lua() {
 
 _build_haproxy() {
     /sbin/ldconfig
-    set -e
+    set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     # 3.2
     _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.2' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.haproxy.org/download/${_haproxy_ver%.*}/src/haproxy-${_haproxy_ver}.tar.gz"
     tar -xof haproxy-*.tar*
-    sleep 1
     rm -f haproxy-*.tar*
     cd haproxy*
     LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
@@ -355,7 +339,6 @@ _build_haproxy() {
         endscript
     }'\'' >/etc/logrotate.d/haproxy
     chmod 0644 /etc/logrotate.d/haproxy
-    sleep 1
     systemctl restart rsyslog.service >/dev/null 2>&1 || : 
     systemctl restart logrotate.service >/dev/null 2>&1 || : 
     # create /etc/ssl/cert.pem
@@ -374,10 +357,8 @@ _build_haproxy() {
     rm -fr var
     rm -fr lib
     echo
-    sleep 1
     tar -Jcvf /tmp/haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_el8_amd64.tar.xz *
     echo
-    sleep 1
     cd /tmp
     sha256sum haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_el8_amd64.tar.xz > haproxy-"${_haproxy_ver}"_"awslc${_aws_lc_tag/v/}"-1_el8_amd64.tar.xz.sha256
     rm -fr "${_tmp_dir}"
@@ -392,7 +373,6 @@ dnf install -y patchelf
 rm -fr /usr/lib64/haproxy
 
 _build_zlib
-_install_go
 _build_aws-lc
 _build_pcre2
 _build_lua
