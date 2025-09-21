@@ -73,7 +73,7 @@ yum install -y libbpf-devel libbabeltrace-devel
 yum install -y glibc-devel libxml2-devel libxslt-devel perl-devel perl gd-devel bc
 
 # aws-lc
-dnf install -y cmake3 ninja-build clang perl
+dnf install -y cmake ninja-build clang perl
 
 yum install -y dracut ; yum update -y dracut
 
