@@ -81,4 +81,3 @@ yum install -y dracut ; yum update -y dracut
 echo
 echo ' preinstall 9 done'
 echo
-
