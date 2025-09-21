@@ -248,9 +248,9 @@ _build_haproxy() {
     LDFLAGS="${LDFLAGS}"
 
     LDFLAGS=''; LDFLAGS="${_ORIG_LDFLAGS}"; export LDFLAGS
-    make admin/halog/halog SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+    make admin/halog/halog SBINDIR=/usr/bin OPTIMIZE= LDFLAGS="$LDFLAGS"
     for admin in iprange; do
-        make -C admin/$admin SBINDIR=/usr/bin OPTIMIZE= CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+        make -C admin/$admin SBINDIR=/usr/bin OPTIMIZE= LDFLAGS="$LDFLAGS"
     done
     echo
     for admin in systemd; do
