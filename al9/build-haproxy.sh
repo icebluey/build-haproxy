@@ -370,9 +370,9 @@ _build_haproxy() {
 ############################################################################
 
 dnf install -y patchelf
-
 rm -fr /usr/lib64/haproxy
-
+. /opt/rh/gcc-toolset-14/enable
+gcc -v; g++ -v
 _build_zlib
 _build_aws-lc
 _build_pcre2
