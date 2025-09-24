@@ -274,7 +274,7 @@ _build_haproxy() {
     cd /tmp/haproxy
     _strip_files
     if [[ -d usr/libexec/haproxy-core ]]; then
-        find usr/libexec/haproxy-core/ -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' /usr/bin/strip '{}'
+        find usr/libexec/haproxy-core/ -type f -exec file '{}' \; | sed -n -e 's/^\(.*\):[  ]*ELF.*, not stripped.*/\1/p' | xargs --no-run-if-empty -I '{}' strip '{}'
     fi
     echo
     rm -f etc/sysconfig/haproxy
