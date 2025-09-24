@@ -78,6 +78,8 @@ dnf install -y cmake ninja-build clang perl
 
 yum install -y dracut ; yum update -y dracut
 
+yum install -y gcc-toolset-14-gcc gcc-toolset-14-gcc-c++
+
 /sbin/ldconfig >/dev/null 2>&1
 echo
 echo ' preinstall 8 done'
