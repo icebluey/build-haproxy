@@ -101,7 +101,7 @@ _build_aws-lc() {
     set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    _aws_lc_tag="$(wget -qO- 'https://github.com/aws/aws-lc/tags' | grep -i 'href="/.*/releases/tag/' | sed 's|"|\n|g' | grep -i '/releases/tag/' | sed 's|.*/tag/||g' | sort -V | uniq | tail -n 1)"
+    _aws_lc_tag="$(wget -qO- 'https://github.com/aws/aws-lc/tags' | grep -i 'href="/.*/releases/tag/' | sed 's|"|\n|g' | grep -i '/releases/tag/' | sed 's|.*/tag/||g' | grep -ivE 'alpha|beta|rc|dev|fips' | grep -i '^v[1-9]' | sort -V | uniq | tail -n1)"
     wget -c -t 9 -T 9 "https://github.com/aws/aws-lc/archive/refs/tags/${_aws_lc_tag}.tar.gz"
     tar -xof *.tar*
     rm -f *.tar*
@@ -216,8 +216,8 @@ _build_haproxy() {
     set -euo pipefail
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
-    # 3.2
-    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.2' | sort -V | tail -n 1)"
+    # 3.3
+    _haproxy_ver="$(wget -qO- 'https://www.haproxy.org/' | grep -i 'src/haproxy-' | sed 's/"/\n/g' | grep '^/download/' | grep -i '\.gz$' | sed -e 's|.*haproxy-||g' -e 's|\.tar.*||g' | grep -ivE 'alpha|beta|rc[1-9]' | grep '^3\.3' | sort -V | tail -n 1)"
     wget -c -t 9 -T 9 "https://www.haproxy.org/download/${_haproxy_ver%.*}/src/haproxy-${_haproxy_ver}.tar.gz"
     tar -xof haproxy-*.tar*
     rm -f haproxy-*.tar*
