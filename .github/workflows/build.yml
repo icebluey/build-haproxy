@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install docker
         run: >
           sudo apt update -y -qqq;
           sudo apt autoremove --purge -y needrestart || true;
-          sudo apt install -y bash wget;
+          sudo apt install -y bash wget openssl;
           sudo ln -svf bash /bin/sh;
           sudo /bin/bash scripts/clean-os.sh;
           sudo apt upgrade -y -qqq;
@@ -52,16 +52,17 @@ jobs:
 
       - name: Generate release tag env
         run: |
-          echo "_dateutc=$(date -u +%Y-%m-%d-%H%M)" >> $GITHUB_ENV
+          haproxy_ver=$(/bin/ls -1 /tmp/_output.tmp/haproxy*el9_amd64.tar.xz | grep -i 'el9_amd64.tar.xz$' | sed -e 's|.*haproxy-||g' -e 's|_.*||g' | head -1)
+          echo "haproxy_ver=${haproxy_ver}" >> $GITHUB_ENV
 
       - name: Upload files
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env._dateutc }}
+          tag_name: v${{ env.haproxy_ver }}
           files: /tmp/_output.tmp/*
+          overwrite_files: true
 
       - name: Delete old release tag env
         run: |
-          sed -e "/^_dateutc=/d" -i $GITHUB_ENV
-
+          sed -e "/^haproxy_ver=/d" -i $GITHUB_ENV
 
