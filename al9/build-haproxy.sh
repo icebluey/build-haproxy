@@ -195,7 +195,8 @@ _build_lua() {
     local _tmp_dir="$(mktemp -d)"
     cd "${_tmp_dir}"
     _lua_ver="$(wget -qO- 'https://www.lua.org/ftp/' | grep -i '<a href' | sed 's/"/ /g' | sed 's/ /\n/g' | grep -i '^lua-[1-9].*\.tar\.gz$' | sed -e 's|lua-||g' -e 's|\.tar.*||g' | sort -V | tail -n 1)"
-    wget -c -t 9 -T 9 "https://www.lua.org/ftp/lua-${_lua_ver}.tar.gz"
+    #wget -c -t 9 -T 9 "https://www.lua.org/ftp/lua-${_lua_ver}.tar.gz"
+    wget -c -t 9 -T 9 'https://www.lua.org/ftp/lua-5.4.8.tar.gz'
     tar -xof lua-*.tar*
     rm -f lua-*.tar*
     cd lua-*
