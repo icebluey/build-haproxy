@@ -35,7 +35,7 @@ yum install -y gcc cpp gcc-c++ libstdc++-devel make m4 libtool pkgconfig groff-b
   patch crontabs cronie info man-db lsof lshw dmidecode pciutils-libs pciutils \
   yum-utils createrepo_c
 
-yum install -y cmake clang llvm
+yum install -y ninja-build cmake clang llvm
 
 yum install -y perl perl-devel perl-libs perl-Env perl-ExtUtils-Embed perl-IPC-Cmd \
   perl-ExtUtils-Install perl-ExtUtils-MakeMaker perl-ExtUtils-Manifest \
