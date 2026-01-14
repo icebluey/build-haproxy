@@ -15,7 +15,7 @@ fi
 docker exec ub2004 apt update -y
 docker exec ub2004 bash -c 'if [[ -f /usr/local/sbin/unminimize ]]; then yes | /usr/local/sbin/unminimize; fi'
 docker exec ub2004 apt upgrade -fy
-docker exec ub2004 apt install -y bash vim wget ca-certificates cmake ninja-build clang perl
+docker exec ub2004 apt install -y bash vim wget ca-certificates
 docker exec ub2004 /bin/ln -svf bash /bin/sh
 docker exec ub2004 /bin/rm -fr /tmp/.setup_env_ub2004
 docker exec ub2004 wget -q "https://raw.githubusercontent.com/icebluey/build/master/.setup_env_ub2004" -O "/tmp/.setup_env_ub2004"
