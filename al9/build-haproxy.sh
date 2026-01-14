@@ -133,7 +133,8 @@ _build_aws-lc() {
     -DLIB_SUFFIX=64 \
     -DBUILD_SHARED_LIBS:BOOL=ON \
     -DCMAKE_INSTALL_SO_NO_EXE:INTERNAL=0
-    cmake --build "aws-lc-build" --parallel $(nproc --all) --verbose
+    #cmake --build "aws-lc-build" --parallel $(nproc --all) --verbose
+    ninja -C "aws-lc-build" -j $(nproc --all) --verbose
     rm -fr /tmp/aws-lc
     DESTDIR="/tmp/aws-lc" cmake --install "aws-lc-build"
     cd /tmp/aws-lc
