@@ -1,0 +1,46 @@
+name: Build-haproxy-ub2004
+on:
+  #push:
+  #  branches: [ "master" ]
+  #pull_request:
+  #  branches: [ "master" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install docker
+        run: >
+          sudo apt update -y -qqq;
+          sudo apt autoremove --purge -y needrestart || true;
+          sudo apt install -y bash wget openssl;
+          sudo ln -svf bash /bin/sh;
+          sudo /bin/bash scripts/clean-os.sh;
+          sudo apt upgrade -y -qqq;
+          sudo /bin/bash scripts/install-docker.sh
+
+      - name: Build haproxy ub2004
+        run: |
+          sudo rm -fr /tmp/_output.tmp
+          sudo bash run-build-ub2004.sh
+          sudo systemctl stop docker.socket docker.service containerd.service
+          sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
+
+      - name: Generate release tag env
+        run: |
+          haproxy_ver=$(/bin/ls -1 /tmp/_output.tmp/haproxy*amd64.tar.xz | sed -e 's|.*haproxy-||g' -e 's|_.*||g' | head -n 1)
+          echo "haproxy_ver=${haproxy_ver}" >> $GITHUB_ENV
+
+      - name: Upload files
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.haproxy_ver }}
+          files: /tmp/_output.tmp/haproxy*.tar.xz*
+          overwrite_files: true
+
+      - name: Delete old release tag env
+        run: |
+          sed -e "/^haproxy_ver=/d" -i $GITHUB_ENV
+          sudo rm -fr /tmp/_output.tmp
+

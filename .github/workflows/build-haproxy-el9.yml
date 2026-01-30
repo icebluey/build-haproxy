@@ -1,5 +1,4 @@
-
-name: Build
+name: Build-haproxy-el9
 on:
   #push:
   #  branches: [ "master" ]
@@ -21,48 +20,27 @@ jobs:
           sudo apt upgrade -y -qqq;
           sudo /bin/bash scripts/install-docker.sh
 
-      - name: Create output tmp
-        run: |
-          /bin/rm -fr /tmp/_output.tmp
-          mkdir /tmp/_output.tmp
-
       - name: Build haproxy al9
         run: |
+          sudo rm -fr /tmp/_output.tmp
           sudo bash run-build-al9.sh
-          sudo systemctl stop docker.socket docker.service containerd.service
-          sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
-
-      - name: Build haproxy al8
-        run: |
-          sudo bash run-build-al8.sh
-          sudo systemctl stop docker.socket docker.service containerd.service
-          sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
-
-      - name: Build haproxy ub2204
-        run: |
-          sudo bash run-build-ub2204.sh
-          sudo systemctl stop docker.socket docker.service containerd.service
-          sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
-
-      - name: Build haproxy ub2004
-        run: |
-          sudo bash run-build-ub2004.sh
           sudo systemctl stop docker.socket docker.service containerd.service
           sudo /bin/rm -fr /var/lib/docker/* /var/lib/containerd/* /mnt/docker-data/*
 
       - name: Generate release tag env
         run: |
-          haproxy_ver=$(/bin/ls -1 /tmp/_output.tmp/haproxy*el9_amd64.tar.xz | grep -i 'el9_amd64.tar.xz$' | sed -e 's|.*haproxy-||g' -e 's|_.*||g' | head -1)
+          haproxy_ver=$(/bin/ls -1 /tmp/_output.tmp/haproxy*amd64.tar.xz | sed -e 's|.*haproxy-||g' -e 's|_.*||g' | head -n 1)
           echo "haproxy_ver=${haproxy_ver}" >> $GITHUB_ENV
 
       - name: Upload files
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.haproxy_ver }}
-          files: /tmp/_output.tmp/*
+          files: /tmp/_output.tmp/haproxy*.tar.xz*
           overwrite_files: true
 
       - name: Delete old release tag env
         run: |
           sed -e "/^haproxy_ver=/d" -i $GITHUB_ENV
+          sudo rm -fr /tmp/_output.tmp
 
